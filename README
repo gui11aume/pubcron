@@ -1,0 +1,3 @@
+pubcron allows users to set up a cron task that routinely performs a PubMed (http://www.ncbi.nlm.nih.gov/pubmed/) query and send them the result by mail.
+
+As of today, pubcron is not deployed.
