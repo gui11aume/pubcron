@@ -15,9 +15,9 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 class MainPage(webapp.RequestHandler):
    def get(self):
-      xmlabstr_list = PubMed.query()
+      abstr_list = PubMed.query()
       template_values = {
-         'abstr_list': xmlabstr_list
+         'abstr_list': abstr_list
       }
 
       path = os.path.join(os.path.dirname(__file__), 'index.html')

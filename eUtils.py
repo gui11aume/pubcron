@@ -29,6 +29,8 @@ def _child_of(node, tag):
    for child in _nodes(node, tag):
       if child.parentNode is node: return child
 
+
+
 ##########################################
 ######          Exceptions          ######
 ##########################################
@@ -47,7 +49,8 @@ class RetMaxExceeded(eSearchException):
       return "count %d > RETMAX = %d" % (self.value, RETMAX)
 
 class NoHitException(eSearchException):
-   pass
+   def __str__(self):
+      return self.value.toxml()
 
 # XML Exceptions.
 class XMLException(Exception):
@@ -64,6 +67,8 @@ class NodeNotFoundException(XMLException):
       %s
       tag_name=%s""" % (self.xmldoc.toxml(), self.tag_name)
 
+
+
 ##########################################
 ######           XMLabstr           ######
 ##########################################
@@ -76,8 +81,11 @@ class XMLabstr:
       # PubMed ID and DOI.
       self.pmid = _child_of(_node(abstr, "MedlineCitation"), \
             "PMID").firstChild.data
-      self.doi = [node.firstChild.data for node in _nodes(abstr, "ArticleId") \
+      try:
+         self.doi = [node.firstChild.data for node in _nodes(abstr, "ArticleId") \
             if node.attributes["IdType"].value == "doi"].pop()
+      except Exception: #TODO: which!!!
+         self.doi = None
 
       # Article Language.
       self.language = _data(abstr, "Language")
@@ -102,10 +110,21 @@ class XMLabstr:
             node.attributes["MajorTopicYN"].value == "N"]
 
       # Publication date as datetime object and string.
-      datestr = "".join([_data(_node(abstr, "PubDate"), ymd) \
-            for ymd in ("Year", "Month", "Day")])
+      # Extract year and month.
+      datestr = "".join([_data(_node(abstr, "PubDate"), ym) 
+            for ym in ("Year", "Month")])
+      # Extract day if available.
+      try:
+         datestr += _data(_node(abstr, "PubDate"), "Day")
+         self.day = True
+      except Exception: #TODO: WHICH EXCEPTION???
+         datestr += "01"
+         self.day = False
       self.pubdate = dt.datetime.strptime(datestr, "%Y%b%d")
-      self.fmt_pubdate = self.pubdate.strftime("%B %d, %Y")
+      if self.day:
+         self.format_pubdate("%B %d, %Y")
+      else:
+         self.format_pubdate("%B, %Y")
 
       # Article Title and abstract text.
       self.title = _data(abstr, "ArticleTitle")
@@ -115,7 +134,7 @@ class XMLabstr:
          self.body = "No abstract available."
 
    def format_pubdate(self, fmt):
-       self.fmt_pubdate = self.pubdate.strftime(fmt)
+      self.fmt_pubdate = self.pubdate.strftime(fmt)
   
 
 
@@ -134,10 +153,7 @@ def cron_query(term, date_from=None, date_to=None):
    ablist = []
    for xml in _nodes(minidom.parseString(query_abstracts(term)), \
          "PubmedArticle"):
-      try:
          ablist.append(XMLabstr(xml))
-      except Exception:
-         pass
    return ablist
 
 
@@ -156,7 +172,7 @@ def query_abstracts(term):
 
 def robust_eSearch_query(term):
    """Robust eSearch query in two steps: the first request checks
-   for errors and count the hits, the second returns the results
+   for errors and counts the hits, the second returns the results
    using "usehistory=y". Fails if errors are encountered, or if no
    result."""
    # Initial query to check for errors and get hit count.
@@ -164,7 +180,7 @@ def robust_eSearch_query(term):
          eSearch_query(term=term, usehistory=False, retmax=0))
    # Check for PubMedErrors. Return the xml result for diagnostic in
    # case of ErrorList tag.
-   if xmldoc.getElementsByTagName("ErrorList"):
+   if _nodes(xmldoc, "ErrorList"):
       raise PubMedError(xmldoc)
 
    count = int(_child_of(_node(xmldoc, "eSearchResult"), \
@@ -189,7 +205,7 @@ def eSearch_query(term, usehistory=False, retmax=0):
 
 
 def eFetch_query(key, webenv):
-   """Implement basic eFetch query through QueryKey and WebEnv."""
+   """Basic eFetch query through QueryKey and WebEnv."""
    return urllib2.urlopen(BASE + "efetch.fcgi?db=pubmed" \
          + "&query_key=" + key \
          + "&WebEnv=" + webenv \
