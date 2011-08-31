@@ -27,7 +27,7 @@
  <body>
   {% for abstr in abstr_list %}
     <p class="journal_date">
-    {{ abstr.journal }}. {{ abstr.fmt_pubdate }}
+    {{ abstr.journal }}. {{ abstr.pubdate }}
     </p>
     <p class="article_title">
     <a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ abstr.pmid }}">{{ abstr.title }}</a>

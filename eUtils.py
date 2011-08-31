@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import sys
 import urllib
 import urllib2
@@ -10,20 +12,20 @@ BASE = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 RETMAX = 5000
 
 # Convenience XML extraction functions.
-def unlist_or_raise(nodelist):
+def unlist_or_raise(nodelist, tag):
    if len(nodelist) > 1:
-      raise Exception("more than one element in %s" % nodelist)
-   return nodelist[0] 
+      raise MultipleTagsException(tag)
+   return nodelist[0]
 
 def _nodes(node, tag):
    return node.getElementsByTagName(tag)
 
 def _node(node, tag):
-   return unlist_or_raise(_nodes(node, tag))
+   return unlist_or_raise(_nodes(node, tag), tag)
 
 def _data(node, tag):
-   extract = unlist_or_raise(_nodes(node, tag))
-   return extract.firstChild.data
+   extract = unlist_or_raise(_nodes(node, tag), tag)
+   return extract.firstChild.data if extract else None
 
 def _child_of(node, tag):
    for child in _nodes(node, tag):
@@ -37,36 +39,27 @@ def _child_of(node, tag):
 
 # eSearch Exceptions.
 class eSearchException(Exception):
-   def __init__(self, value):
-      self.value = value
-
-class PubMedError(eSearchException):
-   def __str__(self):
-      return self.value.toxml()
+   pass
 
 class RetMaxExceeded(eSearchException):
-   def __str__(self):
-      return "count %d > RETMAX = %d" % (self.value, RETMAX)
+   pass
 
 class NoHitException(eSearchException):
+   pass
+
+class PubMedError(eSearchException):
+   def __init__(self, xmldoc):
+      self.xmldoc = xmldoc
+
    def __str__(self):
-      return self.value.toxml()
+      return self.xmldoc.toxml()
 
 # XML Exceptions.
 class XMLException(Exception):
    pass
 
-class NodeNotFoundException(XMLException):
-   def __init__(self, xmldoc, tag_name, top):
-      self.xmldoc = xmldoc
-      self.tag_name = tag_name
-      self.top = top
-
-   def __str__(self):
-      return """
-      %s
-      tag_name=%s""" % (self.xmldoc.toxml(), self.tag_name)
-
+class MultipleTagsException(XMLException)
+   pass
 
 
 ##########################################
@@ -74,18 +67,16 @@ class NodeNotFoundException(XMLException):
 ##########################################
 
 class XMLabstr:
-   """Representation of a PubMed Abstract parsed by minidom."""
+   """Representation of a PubMed Abstract parsed by minidom.
+   Only implements a constructor that specifies static attributes
+   for easier use in Django templates."""
+
    def __init__(self, abstr):
       self.abstr = abstr
 
-      # PubMed ID and DOI.
+      # PubMed ID.
       self.pmid = _child_of(_node(abstr, "MedlineCitation"), \
             "PMID").firstChild.data
-      try:
-         self.doi = [node.firstChild.data for node in _nodes(abstr, "ArticleId") \
-            if node.attributes["IdType"].value == "doi"].pop()
-      except Exception: #TODO: which!!!
-         self.doi = None
 
       # Article Language.
       self.language = _data(abstr, "Language")
@@ -109,33 +100,14 @@ class XMLabstr:
             _nodes(abstr, "DescriptorName") if \
             node.attributes["MajorTopicYN"].value == "N"]
 
-      # Publication date as datetime object and string.
-      # Extract year and month.
-      datestr = "".join([_data(_node(abstr, "PubDate"), ym) 
-            for ym in ("Year", "Month")])
-      # Extract day if available.
-      try:
-         datestr += _data(_node(abstr, "PubDate"), "Day")
-         self.day = True
-      except Exception: #TODO: WHICH EXCEPTION???
-         datestr += "01"
-         self.day = False
-      self.pubdate = dt.datetime.strptime(datestr, "%Y%b%d")
-      if self.day:
-         self.format_pubdate("%B %d, %Y")
-      else:
-         self.format_pubdate("%B, %Y")
+      # Publication date as a string.
+      self.pubdate = " ".join([_data(_node(abstr, "PubDate"), ymd) or "" \
+            for ymd in ("Month", "Day", "Year")])
 
       # Article Title and abstract text.
       self.title = _data(abstr, "ArticleTitle")
-      try:
-         self.body = _data(abstr, "AbstractText")
-      except Exception:
-         self.body = "No abstract available."
+      self.body = _data(abstr, "AbstractText")
 
-   def format_pubdate(self, fmt):
-      self.fmt_pubdate = self.pubdate.strftime(fmt)
-  
 
 
 ##########################################
@@ -151,18 +123,19 @@ def cron_query(term, date_from=None, date_to=None):
    #term += date_from.strftime("%Y/%m/%d:") + \
    term = "filion+gj[author]"
    ablist = []
-   for xml in _nodes(minidom.parseString(query_abstracts(term)), \
+   for xml in _nodes(minidom.parseString(fetch_abstracts(term)), \
          "PubmedArticle"):
          ablist.append(XMLabstr(xml))
    return ablist
 
 
-def query_abstracts(term):
-   """Query PubMed with term and return results in XML (text) format."""
+def fetch_abstracts(term):
+   """Query PubMed and return PubmedArticleSet in (non parsed)
+   XMLformat, or None if no hit."""
    try:
       xmldoc = robust_eSearch_query(term)
    except NoHitException:
-      return
+      return None
    return eFetch_query(
          key = _child_of(_node(xmldoc, "eSearchResult"), \
                "QueryKey").firstChild.data,
@@ -170,29 +143,39 @@ def query_abstracts(term):
                "WebEnv").firstChild.data)
 
 
+def eFetch_query(key, webenv):
+   """Basic eFetch query through QueryKey and WebEnv."""
+   return urllib2.urlopen(BASE + "efetch.fcgi?db=pubmed" \
+         + "&query_key=" + key \
+         + "&WebEnv=" + webenv \
+         + "&retmode=xml").read()
+
+
 def robust_eSearch_query(term):
-   """Robust eSearch query in two steps: the first request checks
-   for errors and counts the hits, the second returns the results
-   using "usehistory=y". Fails if errors are encountered, or if no
-   result."""
+   """Robust eSearch query is carried out in two steps: the first
+   request returns hit count and meta information (PubMed query
+   translation, errors, warnings etc.) on which error checking
+   is performed. The second request returns results using
+   "usehistory=y", producing QueryKey and WebEnv output fields that
+   can be used for future requests or passed on to eFetch."""
    # Initial query to check for errors and get hit count.
-   xmldoc = minidom.parseString(
-         eSearch_query(term=term, usehistory=False, retmax=0))
+   xmldoc = minidom.parseString(eSearch_query(term=term,
+         usehistory=False, retmax=0))
    # Check for PubMedErrors. Return the xml result for diagnostic in
    # case of ErrorList tag.
    if _nodes(xmldoc, "ErrorList"):
       raise PubMedError(xmldoc)
 
+   # Get and control hit count.
    count = int(_child_of(_node(xmldoc, "eSearchResult"), \
          "Count").firstChild.data)
    if count > RETMAX:
       raise RetMaxExceeded(count)
-
    if count == 0:
-      raise NoHitException(xmldoc)
+      raise NoHitException
 
-   return minidom.parseString(
-         eSearch_query(term=term, usehistory=True, retmax=count))
+   return minidom.parseString(eSearch_query(term=term,
+         usehistory=True, retmax=count))
 
 
 def eSearch_query(term, usehistory=False, retmax=0):
@@ -202,11 +185,3 @@ def eSearch_query(term, usehistory=False, retmax=0):
         + "&term=" + term \
         + usehistory \
         + "&retmax=" + str(retmax)).read()
-
-
-def eFetch_query(key, webenv):
-   """Basic eFetch query through QueryKey and WebEnv."""
-   return urllib2.urlopen(BASE + "efetch.fcgi?db=pubmed" \
-         + "&query_key=" + key \
-         + "&WebEnv=" + webenv \
-         + "&retmode=xml").read()
