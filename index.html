@@ -1,0 +1,41 @@
+<html>
+ <head>
+  <style type="text/css">
+    p {
+       margin-top:0em;
+       margin-bottom:0em;
+    }
+    .journal_date {
+       font-size:75%;
+    }
+    .article_title {
+       font-weight:bold;
+    }
+    .author_list {
+       font-style:italic;
+       font-size:80%;
+    }
+    .abstract_body {
+       text-indent:1em;
+       padding-top:.5em;
+       padding-bottom:2em;
+    }
+  </style>
+ </head>
+ <body>
+  {% for abstr in abstr_list %}
+    <p class="journal_date">
+    {{ abstr.journal }}. {{ abstr.fmt_pubdate }}
+    </p>
+    <p class="article_title">
+    <a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ abstr.pmid }}">{{ abstr.title }}</a>
+    </p>
+    <p class="author_list">
+    {{ abstr.initials }}.
+    </p>
+    <p class="abstract_body">
+    {{ abstr.body }}
+    </p>
+  {% endfor %}
+ </body>
+</html>
