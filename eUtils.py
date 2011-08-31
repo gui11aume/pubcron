@@ -15,7 +15,10 @@ RETMAX = 5000
 def unlist_or_raise(nodelist, tag):
    if len(nodelist) > 1:
       raise MultipleTagsException(tag)
-   return nodelist[0]
+   try:
+      return nodelist[0]
+   except IndexError:
+      return None
 
 def _nodes(node, tag):
    return node.getElementsByTagName(tag)
@@ -58,7 +61,7 @@ class PubMedError(eSearchException):
 class XMLException(Exception):
    pass
 
-class MultipleTagsException(XMLException)
+class MultipleTagsException(XMLException):
    pass
 
 
@@ -106,7 +109,7 @@ class XMLabstr:
 
       # Article Title and abstract text.
       self.title = _data(abstr, "ArticleTitle")
-      self.body = _data(abstr, "AbstractText")
+      self.body = _data(abstr, "AbstractText") or ""
 
 
 
