@@ -130,8 +130,8 @@ def cron_query(term, date_from, date_to):
    """Cron wrapper allowing to perform a request with the same term
    at different dates. Return a list of XMLabstr objects."""
    # Update term with creation date information.
-   term = "("+term+")" + date_from.strftime("+AND+%Y%%2F%m%%2F%d:") + \
-   date_to.strftime("%Y%%2F%m%%2F%d[crdt]")
+   term = "("+term+")" + date_from.strftime("+AND+(%Y%%2F%m%%2F%d:") + \
+   date_to.strftime("%Y%%2F%m%%2F%d[crdt])")
 
    hits = fails = []
    for xml_node in _nodes(minidom.parseString(fetch_abstracts(term)), \
