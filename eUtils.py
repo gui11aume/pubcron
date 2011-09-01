@@ -12,23 +12,23 @@ BASE = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 RETMAX = 5000
 
 # Convenience XML extraction functions.
-def unlist_or_raise(nodelist, tag):
+def _unlist_or_raise(nodelist, tag):
    if len(nodelist) > 1:
       raise MultipleTagsException(tag)
    try:
       return nodelist[0]
    except IndexError:
-      return None
+      return u""
 
 def _nodes(node, tag):
    return node.getElementsByTagName(tag)
 
 def _node(node, tag):
-   return unlist_or_raise(_nodes(node, tag), tag)
+   return _unlist_or_raise(_nodes(node, tag), tag)
 
 def _data(node, tag):
-   extract = unlist_or_raise(_nodes(node, tag), tag)
-   return extract.firstChild.data if extract else None
+   extract = _unlist_or_raise(_nodes(node, tag), tag)
+   return extract.firstChild.data if extract else u""
 
 def _child_of(node, tag):
    for child in _nodes(node, tag):
@@ -50,12 +50,20 @@ class RetMaxExceeded(eSearchException):
 class NoHitException(eSearchException):
    pass
 
-class PubMedError(eSearchException):
-   def __init__(self, xmldoc):
-      self.xmldoc = xmldoc
+class PubMedException(eSearchException):
+   def __init__(self, pair_list):
+      class ErrorPair:
+         pass
+      self.pair_list = []
+      for pair in pair_list:
+         o = ErrorPair()
+         o.term = str(pair[0])
+         o.message = str(pair[1])
+         self.pair_list.append(o)
+
 
    def __str__(self):
-      return self.xmldoc.toxml()
+      return str(self.pair_list)
 
 # XML Exceptions.
 class XMLException(Exception):
@@ -81,8 +89,8 @@ class XMLabstr:
       self.pmid = _child_of(_node(abstr, "MedlineCitation"), \
             "PMID").firstChild.data
 
-      # Article Language.
-      self.language = _data(abstr, "Language")
+      # Article Languages.
+      self.languages = _nodes(abstr, "Language")
 
       # Journal and publication types.
       self.journal = _data(_node(abstr, "Journal"), "Title")
@@ -104,12 +112,13 @@ class XMLabstr:
             node.attributes["MajorTopicYN"].value == "N"]
 
       # Publication date as a string.
-      self.pubdate = " ".join([_data(_node(abstr, "PubDate"), ymd) or "" \
-            for ymd in ("Month", "Day", "Year")])
+      self.pubdate = " ".join([_data(_node(abstr, "PubDate"), mdy) \
+            for mdy in ("Month", "Day", "Year")])
 
       # Article Title and abstract text.
       self.title = _data(abstr, "ArticleTitle")
-      self.body = _data(abstr, "AbstractText") or ""
+      self.body = " ".join([x.firstChild.data for x in \
+            _nodes(abstr, "AbstractText")])
 
 
 
@@ -124,21 +133,23 @@ def cron_query(term, date_from=None, date_to=None):
          dt.datetime.today() + dt.timedelta(-1)
    date_to = date_to if date_to else date_from
    #term += date_from.strftime("%Y/%m/%d:") + \
-   term = "filion+gj[author]"
+   #term = "2011%2F08%2F23[crdt]+AND+cancer[olala]+AND+english[language]+olahu[journal]"
+   term = "filion+gf[author]+AND+science[journal]+ricky[ohlala]"
    ablist = []
-   for xml in _nodes(minidom.parseString(fetch_abstracts(term)), \
+   # Main loop.
+   for xmldoc in _nodes(minidom.parseString(fetch_abstracts(term)), \
          "PubmedArticle"):
-         ablist.append(XMLabstr(xml))
+      #try:
+         ablist.append(XMLabstr(xmldoc))
+      #except MultipleTagsException:
+      #   raise Exception (xmldoc.toxml().encode('utf-8'))
    return ablist
 
 
 def fetch_abstracts(term):
    """Query PubMed and return PubmedArticleSet in (non parsed)
    XMLformat, or None if no hit."""
-   try:
-      xmldoc = robust_eSearch_query(term)
-   except NoHitException:
-      return None
+   xmldoc = robust_eSearch_query(term)
    return eFetch_query(
          key = _child_of(_node(xmldoc, "eSearchResult"), \
                "QueryKey").firstChild.data,
@@ -164,10 +175,15 @@ def robust_eSearch_query(term):
    # Initial query to check for errors and get hit count.
    xmldoc = minidom.parseString(eSearch_query(term=term,
          usehistory=False, retmax=0))
-   # Check for PubMedErrors. Return the xml result for diagnostic in
+   # Check for PubMedExceptions. Return the xml result for diagnostic in
    # case of ErrorList tag.
    if _nodes(xmldoc, "ErrorList"):
-      raise PubMedError(xmldoc)
+      translation = _data(xmldoc, "QueryTranslation")
+      report = [(u"Term (as queried)", term.encode('utf-8')), \
+            (u"QueryTranslation", translation)]
+      errors = _node(xmldoc, "ErrorList").childNodes
+      report += [(nd.nodeName, nd.firstChild.data) for nd in errors]
+      raise PubMedException(report)
 
    # Get and control hit count.
    count = int(_child_of(_node(xmldoc, "eSearchResult"), \
