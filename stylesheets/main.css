@@ -1,0 +1,25 @@
+body {
+  font-family:serif;
+}
+#main {
+  position:relative;
+  left:200px;
+  top:70px;
+}
+#submit_area {
+  margin-top:2em;
+}
+#footer {
+  margin-top:2em;
+}
+#logout_button {
+  position:relative;
+  top:40px;
+  left:170px;
+}
+#login {
+  color:purple;
+}
+.term {
+  font-family: monospace;
+}

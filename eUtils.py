@@ -126,24 +126,24 @@ class XMLabstr:
 ######           Functions          ######
 ##########################################
 
-def cron_query(term, date_from=None, date_to=None):
+def cron_query(term, date_from, date_to):
    """Cron wrapper allowing to perform a request with the same term
    at different dates. Return a list of XMLabstr objects."""
-   date_from = date_from if date_from else \
-         dt.datetime.today() + dt.timedelta(-1)
-   date_to = date_to if date_to else date_from
-   #term += date_from.strftime("%Y/%m/%d:") + \
-   #term = "2011%2F08%2F23[crdt]+AND+cancer[olala]+AND+english[language]+olahu[journal]"
-   term = "filion+gf[author]+AND+science[journal]+ricky[ohlala]"
-   ablist = []
-   # Main loop.
-   for xmldoc in _nodes(minidom.parseString(fetch_abstracts(term)), \
+   # Update term with creation date information.
+   term = "("+term+")" + date_from.strftime("+AND+%Y%%2F%m%%2F%d:") + \
+   date_to.strftime("%Y%%2F%m%%2F%d[crdt]")
+
+   hits = fails = []
+   for xml_node in _nodes(minidom.parseString(fetch_abstracts(term)), \
          "PubmedArticle"):
-      #try:
-         ablist.append(XMLabstr(xmldoc))
-      #except MultipleTagsException:
-      #   raise Exception (xmldoc.toxml().encode('utf-8'))
-   return ablist
+      try:
+         abstr = XMLabstr(xml_node)
+      except Exception:
+         # Collect fails (for diagnostic).
+         fails.append(xml_node)
+      else:
+         hits.append(abstr)
+   return (hits, fails)
 
 
 def fetch_abstracts(term):

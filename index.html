@@ -1,43 +1,42 @@
 <html>
- <head>
-  <style type="text/css">
-  <!--
-    p {
-       margin-top:0em;
-       margin-bottom:0em;
-    }
-    .journal_date {
-       font-size:75%;
-    }
-    .article_title {
-       font-weight:bold;
-    }
-    .author_list {
-       font-style:italic;
-       font-size:80%;
-    }
-    .abstract_body {
-       text-indent:1em;
-       padding-top:.5em;
-       padding-bottom:2em;
-    }
-  -->
-  </style>
- </head>
- <body>
-  {% for abstr in abstr_list %}
-    <p class="journal_date">
-    {{ abstr.journal }}. {{ abstr.pubdate }}
-    </p>
-    <p class="article_title">
-    <a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ abstr.pmid }}">{{ abstr.title }}</a>
-    </p>
-    <p class="author_list">
-    {{ abstr.initials }}.
-    </p>
-    <p class="abstract_body">
-    {{ abstr.body }}
-    </p>
-  {% endfor %}
- </body>
+  <head>
+    <title>Pubcron ({{ user_data.user.nickname }})</title>
+    <link type="text/css" rel="stylesheet" href="stylesheets/main.css" />
+  </head>
+  <body>
+    <div id="main">
+    <div id="user_info">
+    {% if user_data.term %}
+      Your PubMed query term as
+      <span id="login">{{ user_data.user.nickname }}</span> is<br />
+      <span class="term">{{ user_data.term }}</span>
+    {% else %}
+      You are logged in as
+      <span id="login">{{ user_data.user.nickname }}</span>.
+    {% endif %}
+    
+    </div>
+
+    <div id="submit_area">
+    Enter the query term to be submitted to PubMed.<br />
+
+    <form action="/update" method="post">
+      <input type="text" name="term" size="40">
+      <input type="submit" value="Submit">
+    </form>
+    <span style="font-size:80%">Example:</span>
+    <span class="term">nature[journal]+OR+science[journal]</span>
+
+    </div>
+
+    <div id="footer">
+    The query results will be sent to
+    <span class="term">{{ user_email }}</span>.
+    </div>
+    <form id="logout_button" action="{{ logout_url }}" method="get">
+      <input type="Submit" value="Logout">
+    </form>
+    </div> <!-- end main -->
+
+  </body>
 </html>

@@ -1,0 +1,5 @@
+cron:
+- description: daily sending job
+  url: /send
+  schedule: every mon,tue,wed,thu,fri 7:00
+  target: version-1

@@ -7,5 +7,9 @@ handlers:
 - url: /stylesheets
   static_dir: stylesheets
 
+- url: /send
+  script: send.py
+  login: admin
+
 - url: /.*
   script: pubcron.py

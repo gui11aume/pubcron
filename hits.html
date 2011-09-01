@@ -1,0 +1,18 @@
+<html>
+ <body>
+  {% for abstr in abstr_list %}
+    <p class="journal_date" style="font-zie:75%;">
+    {{ abstr.journal }}. {{ abstr.pubdate }}
+    </p>
+    <p class="article_title" style="font-weight:bold;">
+    <a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ abstr.pmid }}">{{ abstr.title }}</a>
+    </p>
+    <p class="author_list" style="font-style:italic; font-size:80%;">
+    {{ abstr.initials }}.
+    </p>
+    <p class="abstract_body" style="text-indent:1em;">
+    {{ abstr.body }}
+    </p>
+  {% endfor %}
+ </body>
+</html>
