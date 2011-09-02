@@ -191,7 +191,7 @@ def robust_eSearch_query(term):
    if count > RETMAX:
       raise RetMaxExceeded(count)
    if count == 0:
-      raise NoHitException
+      raise NoHitException(term)
 
    return minidom.parseString(eSearch_query(term=term,
          usehistory=True, retmax=count))
