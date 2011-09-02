@@ -28,10 +28,13 @@ class TermException(Exception):
    pass
 
 def validate(term):
-   if term.upper().find("CRDT") > -1:
-      raise TermException("CRDT")
+   term = term.upper()
    if term.find("/") > -1:
       raise TermException("/")
+   if term.find(" ") > -1:
+      raise TermException(" ")
+   if term.find("CRDT") > -1 or term.find("CRDAT") > -1:
+      raise TermException("CRDT")
 
 
 class MainPage(webapp.RequestHandler):
@@ -62,7 +65,7 @@ class MainPage(webapp.RequestHandler):
          self.response.out.write(template.render(path, template_values))
 
       else:
-         # Go log in.
+         # Not logged in... Go log in then.
          self.redirect(users.create_login_url(self.request.uri))
    
 class UpdateTerm(webapp.RequestHandler):
@@ -75,19 +78,15 @@ class UpdateTerm(webapp.RequestHandler):
 
          user_data = data[0]
 
-         term = self.request.get("term")
-         # TODO:
-         # Validation is carried out by JavaScript.
-         # If this fails, the user is probably trying to hack.
-         validate(term)
-
          # Update term.
+         term = self.request.get("term")
          user_data.term = cgi.escape(term)
 
          # Check if term is OK.
          today = datetime.datetime.today()
          success = False
          try:
+            validate(user_data.term)
             eUtils.cron_query(user_data.term, today, today)
             success = True
          except eUtils.NoHitException, err:
