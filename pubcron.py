@@ -17,6 +17,7 @@ class UserData(db.Model):
    """Store user term query and date lat run."""
    user = db.UserProperty()
    term = db.StringProperty()
+   term_valid = db.BooleanProperty()
    last_run = db.DateTimeProperty()
 
 def term_key():
@@ -65,8 +66,8 @@ class MainPage(webapp.RequestHandler):
          self.redirect(users.create_login_url(self.request.uri))
    
 class UpdateTerm(webapp.RequestHandler):
+   """Handle user term update."""
    def post(self):
-
       user = users.get_current_user()
       if user:
          data = UserData.gql("WHERE ANCESTOR IS :1 AND user = :2",
@@ -82,12 +83,24 @@ class UpdateTerm(webapp.RequestHandler):
 
          # Update term.
          user_data.term = cgi.escape(term)
+
+         # Check if term is OK.
+         today = datetime.datetime.today()
+         success = False
+         try:
+            eUtils.cron_query(user_data.term, today, today)
+            success = True
+         except eUtils.NoHitException, err:
+            success = True
+         except Exception:
+            pass
+
+         user_data.term_valid = success
          user_data.put()
 
       self.redirect("/")
-         
 
-  
+
 application = webapp.WSGIApplication([
   ("/", MainPage),
   ("/update", UpdateTerm),

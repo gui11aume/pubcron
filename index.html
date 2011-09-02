@@ -10,6 +10,11 @@
       Your PubMed query term as
       <span id="login">{{ user_data.user.nickname }}</span> is<br />
       <span class="term">{{ user_data.term }}</span>
+      {% if user_data.term_valid %}
+      <span class="valid">(valid)</span>
+      {% else %}
+      <span class="invalid">(not valid)</span>
+      {% endif %}
     {% else %}
       You are logged in as
       <span id="login">{{ user_data.user.nickname }}</span>.

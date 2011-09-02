@@ -21,5 +21,12 @@ body {
   color:purple;
 }
 .term {
-  font-family: monospace;
+  font-family:monospace;
+}
+.valid {
+  color:green;
+}
+.invalid {
+  font-weight:bold;
+  color:red;
 }
