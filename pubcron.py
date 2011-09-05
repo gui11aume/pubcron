@@ -68,6 +68,7 @@ class MainPage(webapp.RequestHandler):
          # Not logged in... Go log in then.
          self.redirect(users.create_login_url(self.request.uri))
    
+
 class UpdateTerm(webapp.RequestHandler):
    """Handle user term update."""
    def post(self):
@@ -83,15 +84,17 @@ class UpdateTerm(webapp.RequestHandler):
          user_data.term = cgi.escape(term)
 
          # Check if term is OK.
-         today = datetime.datetime.today()
          success = False
          try:
             validate(user_data.term)
-            eUtils.cron_query(user_data.term, today, today)
+            eUtils.robust_eSearch_query(user_data.term)
             success = True
-         except eUtils.NoHitException, err:
-            success = True
+         except (TermException, PubMedException, NoHitException):
+            # We keep 'success' False.
+            pass 
          except Exception:
+            # Something else happened.
+            #TODO: issue a warning.
             pass
 
          user_data.term_valid = success
