@@ -27,6 +27,9 @@ def term_key():
 class TermException(Exception):
    pass
 
+def clean(term):
+   return term.replace(" ", "+")
+
 def validate(term):
    term = term.upper()
    if term.find("/") > -1:
@@ -80,7 +83,7 @@ class UpdateTerm(webapp.RequestHandler):
          user_data = data[0]
 
          # Update term.
-         term = self.request.get("term")
+         term = clean(self.request.get("term"))
          user_data.term = cgi.escape(term)
 
          # Check if term is OK.

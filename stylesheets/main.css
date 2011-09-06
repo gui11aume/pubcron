@@ -45,8 +45,9 @@ h1 {
   top:40px;
   left:170px;
 }
-#login {
-  color:purple;
+.login {
+  color:FF6600;
+  font-weight:bold;
 }
 .cron {
   color:FFCC99;

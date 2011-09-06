@@ -12,7 +12,7 @@
     <div id="user_info">
     {% if user_data.term %}
       Your PubMed query term as
-      <span id="login">{{ user_data.user.nickname }}</span> is<br />
+      <span class="login">{{ user_data.user.nickname }}</span> is<br />
       <span class="term">{{ user_data.term }}</span>
       {% if user_data.term_valid %}
       <span class="valid">(valid)</span>
@@ -40,7 +40,7 @@
 
     <div id="footer">
     The query results will be sent to
-    <span class="term">{{ user_email }}</span>.
+    <span class="login">{{ user_email }}</span>.
     </div>
     <form id="logout_button" action="{{ logout_url }}" method="get">
       <input type="Submit" value="Logout">
