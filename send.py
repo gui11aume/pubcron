@@ -12,8 +12,8 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 def mail_admin(user, message):
-   mail.send_mail("guillaume.filion@gmail.com",
-                  "guillaume.filion@gmail.com",
+   mail.send_mail("pubcron.mailer@gmail.com",
+                  "pubcron.mailer@gmail.com",
                   "Pubcron user error",
                   "User %s:\n%s" % (user, message))
 
@@ -73,7 +73,7 @@ class Sender(webapp.RequestHandler):
          # Create the email message (with hits or error report).
          msg = mail.EmailMessage()
          msg.initialize(to=user_data.user.email(),
-            sender="guillaume.filion@gmail.com",
+            sender="pubcron.mailer@gmail.com",
             subject=subject, body="Message in HTML format.",
             html=template.render(path, template_values))
          msg.send()

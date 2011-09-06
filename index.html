@@ -1,9 +1,13 @@
 <html>
   <head>
-    <title>Pubcron ({{ user_data.user.nickname }})</title>
+    <title>PubCron ({{ user_data.user.nickname }})</title>
     <link type="text/css" rel="stylesheet" href="stylesheets/main.css" />
   </head>
   <body>
+    <div id="band"><div id="header"><h1>Pub<span class="cron">Cron</span></h1></div></div>
+    <div id="spacer"></div>
+    <div id="main_container">
+    <div id="left_band"></div>
     <div id="main">
     <div id="user_info">
     {% if user_data.term %}
@@ -41,6 +45,7 @@
     <form id="logout_button" action="{{ logout_url }}" method="get">
       <input type="Submit" value="Logout">
     </form>
+    </div> <!-- end main_container -->
     </div> <!-- end main -->
 
   </body>
