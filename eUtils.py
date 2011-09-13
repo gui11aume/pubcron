@@ -61,7 +61,6 @@ class PubMedException(eSearchException):
          o.message = str(pair[1])
          self.pair_list.append(o)
 
-
    def __str__(self):
       return str(self.pair_list)
 
@@ -74,10 +73,10 @@ class MultipleTagsException(XMLException):
 
 
 ##########################################
-######           XMLabstr           ######
+######             Abstr            ######
 ##########################################
 
-class XMLabstr:
+class Abstr:
    """Representation of a PubMed Abstract parsed by minidom.
    Only implements a constructor that specifies static attributes
    for easier use in Django templates."""
@@ -85,40 +84,60 @@ class XMLabstr:
    def __init__(self, abstr):
       self.abstr = abstr
 
-      # PubMed ID.
-      self.pmid = _child_of(_node(abstr, "MedlineCitation"), \
-            "PMID").firstChild.data
+      def brack(string):
+         """Convenience method for ref formating."""
+         return "(" + string + ")" if string else ""
 
-      # Article Languages.
-      self.languages = _nodes(abstr, "Language")
+      # Embed construction in a 'try' statement, then set the 
+      # 'fail' attribute.
+      try:
+         # PubMed ID.
+         self.pmid = _child_of(_node(abstr, "MedlineCitation"), \
+               "PMID").firstChild.data
 
-      # Journal and publication types.
-      self.journal = _data(_node(abstr, "Journal"), "Title")
-      self.pubtypes = [node.firstChild.data for node in \
-           _nodes(abstr, "PublicationType")]
+         # Article Languages.
+         self.languages = _nodes(abstr, "Language")
 
-      # Authors.
-      self.authors = ", ".join([_data(auth, "ForeName") + " " + \
-            _data(auth, "LastName") for auth in _nodes(abstr, "Author")])
-      self.initials = ", ".join([_data(auth, "Initials") + " " + \
-            _data(auth, "LastName") for auth in _nodes(abstr, "Author")])
+         # Journal, references and publication types.
+         jnode = _node(abstr, "Journal")
+         self.journal = _data(jnode, "Title")
+         self.ref =  _data(jnode, "Volume") + \
+               brack(_data(jnode, "Issue")) + ":" + \
+               _data(abstr, "MedlinePgn")
+         
+         self.pubtypes = [node.firstChild.data for node in \
+              _nodes(abstr, "PublicationType")]
 
-      # MeSH terms.
-      self.majorMeSH = [node.firstChild.data for node in \
-            _nodes(abstr, "DescriptorName") if \
-            node.attributes["MajorTopicYN"].value == "Y"]
-      self.minorMeSH = [node.firstChild.data for node in \
-            _nodes(abstr, "DescriptorName") if \
-            node.attributes["MajorTopicYN"].value == "N"]
 
-      # Publication date as a string.
-      self.pubdate = " ".join([_data(_node(abstr, "PubDate"), mdy) \
-            for mdy in ("Month", "Day", "Year")])
+         # Authors.
+         self.authors = ", ".join([_data(auth, "ForeName") + " " + \
+               _data(auth, "LastName") for auth in _nodes(abstr, "Author")])
+         self.initials = ", ".join([_data(auth, "Initials") + " " + \
+               _data(auth, "LastName") for auth in _nodes(abstr, "Author")])
 
-      # Article Title and abstract text.
-      self.title = _data(abstr, "ArticleTitle")
-      self.body = " ".join([x.firstChild.data for x in \
-            _nodes(abstr, "AbstractText")])
+         # MeSH terms.
+         self.majorMeSH = [node.firstChild.data for node in \
+               _nodes(abstr, "DescriptorName") if \
+               node.attributes["MajorTopicYN"].value == "Y"]
+         self.minorMeSH = [node.firstChild.data for node in \
+               _nodes(abstr, "DescriptorName") if \
+               node.attributes["MajorTopicYN"].value == "N"]
+
+         # Publication date as a string.
+         self.pubdate = " ".join([_data(_node(abstr, "PubDate"), mdy) \
+               for mdy in ("Month", "Day", "Year")])
+
+         # Article Title and abstract text.
+         self.title = _data(abstr, "ArticleTitle")
+         self.body = " ".join([x.firstChild.data for x in \
+               _nodes(abstr, "AbstractText")])
+
+      except Exception, e:
+         # Construction failed, keep the error in attribute 'fail'.
+         self.fail = e
+      else:
+         # Construction succeeded.
+         self.fail = False
 
 
 
@@ -128,23 +147,17 @@ class XMLabstr:
 
 def cron_query(term, date_from, date_to):
    """Cron wrapper allowing to perform a request with the same term
-   at different dates. Return a list of XMLabstr objects."""
+   at different dates. Return a list of Abstr objects."""
    # Update term with creation date information.
    term = "("+term+")" + date_from.strftime("+AND+(%Y%%2F%m%%2F%d:") + \
    date_to.strftime("%Y%%2F%m%%2F%d[crdt])")
 
-   hits = fails = []
-   for xml_node in _nodes(minidom.parseString(fetch_abstracts(term)), \
-         "PubmedArticle"):
-      try:
-         abstr = XMLabstr(xml_node)
-      except Exception:
-         # Collect fails (for diagnostic).
-         fails.append(xml_node)
-      else:
-         hits.append(abstr)
-   return (hits, fails)
+   return toAbstr(fetch_abstracts(term))
 
+def toAbstr(xml):
+   """Parse XML string to a list of instances of Abstr."""
+   return [Abstr(node) for node in _nodes(minidom.parseString(xml), \
+         "PubmedArticle")]
 
 def fetch_abstracts(term):
    """Query PubMed and return PubmedArticleSet in (non parsed)
