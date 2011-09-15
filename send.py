@@ -14,10 +14,10 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 def mail_admin(user, message):
    mail.send_mail("pubcron.mailer@gmail.com",
                   "pubcron.mailer@gmail.com",
-                  "Pubcron user error",
+                  "Pubcron mail report",
                   "User %s:\n%s" % (user, message))
 
-class Sender(webapp.RequestHandler):
+class Despatcher(webapp.RequestHandler):
    """Called by the cron scheduler. Query PubMed with all the
    saved user terms and send them a mail."""
 
@@ -45,11 +45,17 @@ class Sender(webapp.RequestHandler):
                datetime.timedelta(days=-1)
          date_from = user_data.last_run or yesterday
          date_to = max(yesterday, date_from)
+         term = "("+term+")" + \
+               date_from.strftime("+AND+(%Y%%2F%m%%2F%d:") + \
+               date_to.strftime("%Y%%2F%m%%2F%d[crdt])")
+
+         # DEBUG:
+         mail_admin(str(user_data.user.nickname), term)
 
          # Fetch the abstracts.
          try:
-            (abstr_list, fails) = eUtils.cron_query(term,
-                  date_from, date_to)
+            raw = eUtils.toAbstr(eUtils.fetch_abstracts(term))
+            abstr_list = [h for h in raw if not h.fail]
             template_values = {
                'abstr_list': abstr_list
             }
@@ -80,7 +86,7 @@ class Sender(webapp.RequestHandler):
 
 
 application = webapp.WSGIApplication([
-  ("/send", Sender),
+  ("/send", Despatcher),
 ], debug=True)
 
 def main():

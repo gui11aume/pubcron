@@ -18,7 +18,7 @@ def _unlist_or_raise(nodelist, tag):
    try:
       return nodelist[0]
    except IndexError:
-      return u""
+      return u''
 
 def _nodes(node, tag):
    return node.getElementsByTagName(tag)
@@ -28,7 +28,11 @@ def _node(node, tag):
 
 def _data(node, tag):
    extract = _unlist_or_raise(_nodes(node, tag), tag)
-   return extract.firstChild.data if extract else u""
+   try:
+      return extract.firstChild.data if extract else u''
+   except AttributeError:
+      # The node exists, but it is empty.
+      return u''
 
 def _child_of(node, tag):
    for child in _nodes(node, tag):
@@ -145,14 +149,6 @@ class Abstr:
 ######           Functions          ######
 ##########################################
 
-def cron_query(term, date_from, date_to):
-   """Cron wrapper allowing to perform a request with the same term
-   at different dates. Return a list of Abstr objects."""
-   # Update term with creation date information.
-   term = "("+term+")" + date_from.strftime("+AND+(%Y%%2F%m%%2F%d:") + \
-   date_to.strftime("%Y%%2F%m%%2F%d[crdt])")
-
-   return toAbstr(fetch_abstracts(term))
 
 def toAbstr(xml):
    """Parse XML string to a list of instances of Abstr."""
