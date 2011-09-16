@@ -31,6 +31,7 @@ class Despatcher(webapp.RequestHandler):
          term = str(user_data.term)
 
          # Update last time run.
+         last_run = user_data.last_run
          user_data.last_run = datetime.datetime.now()
          user_data.put()
 
@@ -43,7 +44,7 @@ class Despatcher(webapp.RequestHandler):
 
          yesterday = datetime.datetime.today() + \
                datetime.timedelta(days=-1)
-         date_from = user_data.last_run or yesterday
+         date_from = last_run or yesterday
          date_to = max(yesterday, date_from)
          term = "("+term+")" + \
                date_from.strftime("+AND+(%Y%%2F%m%%2F%d:") + \
