@@ -23,6 +23,8 @@ class Despatcher(webapp.RequestHandler):
 
    def get(self):
 
+      if not users.is_current_user_admin():
+         return
 
       # Get all user data.
       data = UserData.gql("WHERE ANCESTOR IS :1", term_key())
