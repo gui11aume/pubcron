@@ -110,6 +110,8 @@ class UpdateTerm(webapp.RequestHandler):
 
       self.redirect("/")
 
+   def get(self):
+      self.redirect("/")
 
 application = webapp.WSGIApplication([
   ("/", MainPage),

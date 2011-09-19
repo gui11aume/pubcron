@@ -50,9 +50,6 @@ class Despatcher(webapp.RequestHandler):
                date_from.strftime("+AND+(%Y%%2F%m%%2F%d:") + \
                date_to.strftime("%Y%%2F%m%%2F%d[crdt])")
 
-         # DEBUG:
-         mail_admin(str(user_data.user.nickname), term)
-
          # Fetch the abstracts.
          try:
             raw = eUtils.toAbstr(eUtils.fetch_abstracts(term))
