@@ -61,6 +61,7 @@ class Despatcher(webapp.RequestHandler):
             raw = eUtils.toAbstr(eUtils.fetch_abstracts(term))
             abstr_list = [h for h in raw if not h.fail]
             template_values = {
+               'user': user_data.user.nickname(),
                'abstr_list': abstr_list
             }
             path = os.path.join(os.path.dirname(__file__), 'hits.html')

@@ -1,4 +1,5 @@
 import os
+import re
 import cgi
 import datetime
 import urllib
@@ -19,18 +20,25 @@ class UserData(db.Model):
    term = db.StringProperty()
    term_valid = db.BooleanProperty()
    last_run = db.DateTimeProperty()
+   marked_abstracts = db.Text()
 
 def term_key():
    """Construct a datastore key for a Term entity."""
    return db.Key.from_path("Term", "1")
 
-class TermException(Exception):
+class UpdateException(Exception):
+   pass
+
+class TermException(UpdateException):
+   pass
+
+class DataException(UpdateException):
    pass
 
 def clean(term):
    return term.replace(" ", "+")
 
-def validate(term):
+def validate_term(term):
    term = term.upper()
    if term.find("/") > -1:
       raise TermException("/")
@@ -38,6 +46,10 @@ def validate(term):
       raise TermException(" ")
    if term.find("CRDT") > -1 or term.find("CRDAT") > -1:
       raise TermException("CRDT")
+
+def validate_pmid(id):
+   if not re.match('[0-9]+$', id):
+      raise DataException
 
 
 class MainPage(webapp.RequestHandler):
@@ -89,7 +101,7 @@ class UpdateTerm(webapp.RequestHandler):
          # Check if term is OK.
          success = False
          try:
-            validate(user_data.term)
+            validate_term(user_data.term)
             eUtils.robust_eSearch_query(user_data.term)
             success = True
          except eUtils.RetMaxExceeded:
@@ -110,12 +122,41 @@ class UpdateTerm(webapp.RequestHandler):
 
       self.redirect("/")
 
-   def get(self):
-      self.redirect("/")
+class MailUpdate(webapp.RequestHandler):
+   """Handle Gmail form update."""
+   def post(self):
+      try:
+         pmid = self.request.get("pmid")
+         validate_pmid(pmid)
+      except DataException:
+         # Hacked!
+         return
+
+      user = users.get_current_user()
+      data = UserData.gql("WHERE ANCESTOR IS :1 AND user = :2",
+            term_key(), user)
+
+      try:
+         user_data = data[0]
+      except IndexError:
+         # Hacked!
+         return
+
+      if not user.nickname() == self.request.get("user"):
+         # Hacked!
+         return
+
+      if not re.search(pmid, user_data.marked_abstracts):
+         user_data.marked_abstracts += ":" + pmid
+         user_data.put()
+
+      self.response.out.write("Feature under development")
+
 
 application = webapp.WSGIApplication([
   ("/", MainPage),
   ("/update", UpdateTerm),
+  ("/mailupdate", MailUpdate),
 ], debug=True)
 
 
