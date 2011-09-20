@@ -13,3 +13,4 @@ handlers:
 
 - url: /.*
   script: pubcron.py
+  login: required

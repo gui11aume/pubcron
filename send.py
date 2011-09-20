@@ -23,8 +23,12 @@ class Despatcher(webapp.RequestHandler):
 
    def get(self):
 
-      if not users.is_current_user_admin():
-         return
+      # DEBUG
+      admin = cron = ''
+      if users.is_current_user_admin():
+         admin = admin
+      if self.request.headers.get("X-AppEngine-Cron"):
+         cron = cron
 
       # Get all user data.
       data = UserData.gql("WHERE ANCESTOR IS :1", term_key())
@@ -61,6 +65,9 @@ class Despatcher(webapp.RequestHandler):
             }
             path = os.path.join(os.path.dirname(__file__), 'hits.html')
             subject = "Recently on PubMed"
+            # DEBUG
+            if admin or cron:
+               subject += " -- % %" % (admin, cron)
          except eUtils.PubMedException, error:
             template_values = {
                'pair_list': error.pair_list
