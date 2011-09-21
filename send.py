@@ -2,7 +2,7 @@ import os
 import datetime
 import eUtils
 
-from pubcron import UserData, term_key
+from pubcron import UserData, term_key, get_words
 
 from google.appengine.api import users
 from google.appengine.ext import webapp
@@ -60,6 +60,23 @@ class Despatcher(webapp.RequestHandler):
          try:
             raw = eUtils.toAbstr(eUtils.fetch_abstracts(term))
             abstr_list = [h for h in raw if not h.fail]
+
+
+            #########################################
+            #TODO: Move this part to some other place.
+            # ... and of course code it better.
+            #########################################
+            r = (1 + len(user_data.irrelevant_abstracts.split(':'))) / (1 + len(user_data.relevant_abstracts.split(':')))
+            for ab in abstr_list:
+               words = get_words(ab.title)
+               score = 0.01 # Fraction relevant abstracts
+               for w in words:
+                  p = 1 + user_data.positive_terms.count(w)
+                  q = 1 + user_data.negative_terms.count(w)
+                  score *= r*p/q
+	       ab.score = '%.2f' % score
+
+            
             template_values = {
                'user': user_data.user.nickname(),
                'abstr_list': abstr_list

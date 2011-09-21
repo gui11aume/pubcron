@@ -20,11 +20,14 @@ class UserData(db.Model):
    term = db.StringProperty()
    term_valid = db.BooleanProperty()
    last_run = db.DateTimeProperty()
-   marked_abstracts = db.Text()
+   relevant_abstracts = db.TextProperty()
+   irrelevant_abstracts = db.TextProperty()
+   positive_terms = db.TextProperty()
+   negative_terms = db.TextProperty()
 
 def term_key():
    """Construct a datastore key for a Term entity."""
-   return db.Key.from_path("Term", "1")
+   return db.Key.from_path('Term', '1')
 
 class UpdateException(Exception):
    pass
@@ -36,20 +39,37 @@ class DataException(UpdateException):
    pass
 
 def clean(term):
-   return term.replace(" ", "+")
+   return term.replace(' ', '+')
 
 def validate_term(term):
    term = term.upper()
-   if term.find("/") > -1:
-      raise TermException("/")
-   if term.find(" ") > -1:
-      raise TermException(" ")
-   if term.find("CRDT") > -1 or term.find("CRDAT") > -1:
-      raise TermException("CRDT")
+   if '/' in term:
+      raise TermException('/')
+   if ' ' in term:
+      raise TermException(' ')
+   if 'CRDT' in term or 'CRDAT' in term:
+      raise TermException('CRDT')
 
 def validate_pmid(id):
    if not re.match('[0-9]+$', id):
       raise DataException
+
+def get_words(string):
+   """Remove stop words, punctuation and numbers from a string."""
+
+   # Here-list of stop words.
+   stopw = ('and', 'the', 'of', 'a', 'in', 'to', 'at', 'by',
+             'as', 'with', 'via', 'is', 'are', 'from')
+
+   string = string.replace('-', ' ')
+   # Remove punctuation.
+   for sign in (':', '?', '.', ',', ';'):
+      string = string.replace(sign, '')
+   # Remove isolated numbers (after replacing dash by space).
+   string  = re.sub(' [0-9]+ ', ' ', string)
+   # Split, remove stopwords.
+   return [w for w in string.split(' ') if not w in stopw]
+
 
 
 class MainPage(webapp.RequestHandler):
@@ -60,7 +80,7 @@ class MainPage(webapp.RequestHandler):
 
       if user:
          # From here the user is logged in as user.
-         data = UserData.gql("WHERE ANCESTOR IS :1 AND user = :2",
+         data = UserData.gql('WHERE ANCESTOR IS :1 AND user = :2',
                term_key(), user)
          try:
             user_data = data[0]
@@ -68,12 +88,15 @@ class MainPage(webapp.RequestHandler):
             # First user visit: create user data.
             user_data = UserData(term_key())
             user_data.user = user
+            user_data.relevant_abstracts = db.Text(u':')
+            user_data.irrelevant_abstracts = db.Text(u':')
+            user_data.positive_terms = db.Text(u':')
+            user_data.negative_terms = db.Text(u':')
             user_data.put()
    
          template_values = {
-            "user_data": user_data,
-            "user_email": user.email(),
-            "logout_url": users.create_logout_url(self.request.uri),
+            'user_data': user_data,
+            'user_email': user.email(),
          }
 
          path = os.path.join(os.path.dirname(__file__), 'index.html')
@@ -89,13 +112,13 @@ class UpdateTerm(webapp.RequestHandler):
    def post(self):
       user = users.get_current_user()
       if user:
-         data = UserData.gql("WHERE ANCESTOR IS :1 AND user = :2",
+         data = UserData.gql('WHERE ANCESTOR IS :1 AND user = :2',
                term_key(), user)
 
          user_data = data[0]
 
          # Update term.
-         term = clean(self.request.get("term"))
+         term = clean(self.request.get('term'))
          user_data.term = cgi.escape(term)
 
          # Check if term is OK.
@@ -120,20 +143,21 @@ class UpdateTerm(webapp.RequestHandler):
          user_data.term_valid = success
          user_data.put()
 
-      self.redirect("/")
+      self.redirect('/')
+
 
 class MailUpdate(webapp.RequestHandler):
    """Handle Gmail form update."""
    def post(self):
       try:
-         pmid = self.request.get("pmid")
+         pmid = self.request.get('pmid')
          validate_pmid(pmid)
       except DataException:
          # Hacked!
          return
 
       user = users.get_current_user()
-      data = UserData.gql("WHERE ANCESTOR IS :1 AND user = :2",
+      data = UserData.gql('WHERE ANCESTOR IS :1 AND user = :2',
             term_key(), user)
 
       try:
@@ -142,21 +166,34 @@ class MailUpdate(webapp.RequestHandler):
          # Hacked!
          return
 
-      if not user.nickname() == self.request.get("user"):
+      if not user.nickname() == self.request.get('user'):
          # Hacked!
          return
 
-      if not re.search(pmid, user_data.marked_abstracts):
-         user_data.marked_abstracts += ":" + pmid
+      if not pmid in user_data.relevant_abstracts + \
+            user_data.irrelevant_abstracts:
+         # Parse the title.
+         title = self.request.get('title').lower()
+         words = get_words(title)
+         # Update user data...
+         if self.request.get('answer') == 'Yes':
+            user_data.relevant_abstracts = db.Text(
+                  user_data.relevant_abstracts + pmid + ':')
+            user_data.positive_terms = db.Text(
+                  user_data.positive_terms + ':'.join(words) + ':')
+         elif self.request.get('answer') == 'No':
+            user_data.irrelevant_abstracts = db.Text(
+                  user_data.irrelevant_abstracts + pmid + ':')
+            user_data.negative_terms = db.Text(
+                  user_data.negative_terms + ':'.join(words) + ':')
+         # ... and push.
          user_data.put()
-
-      self.response.out.write("Feature under development")
-
+         
 
 application = webapp.WSGIApplication([
-  ("/", MainPage),
-  ("/update", UpdateTerm),
-  ("/mailupdate", MailUpdate),
+  ('/', MainPage),
+  ('/update', UpdateTerm),
+  ('/mailupdate', MailUpdate),
 ], debug=True)
 
 
