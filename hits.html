@@ -1,5 +1,7 @@
 <html>
  <body>
+  <form name="relevance" action="http://pubcron.appspot.com/mailupdate" method="post">
+    <input type="hidden" name="user" value="{{ user }}" />
   {% for abstr in abstr_list %}
     <span class="journal_date" style="font-zie:75%;">
     {{ abstr.journal }}. {{ abstr.pubdate }}
@@ -14,15 +16,12 @@
     {{ abstr.body }}
     </p>
     Is this abstract relevant?
-    <form name="relevance" action="http://pubcron.appspot.com/mailupdate" method="post">
-      <input type="hidden" name="pmid" value="{{ abstr.pmid }}" />
-      <input type="hidden" name="title" value="{{ abstr.title }}" />
-      <input type="hidden" name="user" value="{{ user }}" />
-      <input type="submit" name="answer" value="Yes" />
-      <input type="submit" name="answer" value="No" />
-    </form>
+    <input type="radio" name="{{ abstr.pmid }}:{{ abstr.title }}" value="Yes" /> Yes
+    <input type="radio" name="{{ abstr.pmid }}:{{ abstr.title }}" value="No" /> No
     <br />
     <br />
   {% endfor %}
+    <input type="submit" value="Send update" />
+  </form>
  </body>
 </html>

@@ -6,6 +6,7 @@ import urllib
 import wsgiref.handlers
 
 import eUtils
+import BayesianClass
 
 from google.appengine.api import users
 from google.appengine.ext import webapp
@@ -50,25 +51,10 @@ def validate_term(term):
    if 'CRDT' in term or 'CRDAT' in term:
       raise TermException('CRDT')
 
-def validate_pmid(id):
-   if not re.match('[0-9]+$', id):
+def validate_pmid(idlist):
+   """List of PMIDs consist of 8 digits separated by ':'."""
+   if not re.match('([0-9]{8}:)*$', idlist):
       raise DataException
-
-def get_words(string):
-   """Remove stop words, punctuation and numbers from a string."""
-
-   # Here-list of stop words.
-   stopw = ('and', 'the', 'of', 'a', 'in', 'to', 'at', 'by',
-             'as', 'with', 'via', 'is', 'are', 'from')
-
-   string = string.replace('-', ' ')
-   # Remove punctuation.
-   for sign in (':', '?', '.', ',', ';'):
-      string = string.replace(sign, '')
-   # Remove isolated numbers (after replacing dash by space).
-   string  = re.sub(' [0-9]+ ', ' ', string)
-   # Split, remove stopwords.
-   return [w for w in string.split(' ') if not w in stopw]
 
 
 
@@ -99,8 +85,10 @@ class MainPage(webapp.RequestHandler):
             'user_email': user.email(),
          }
 
-         path = os.path.join(os.path.dirname(__file__), 'index.html')
-         self.response.out.write(template.render(path, template_values))
+         path = os.path.join(os.path.dirname(__file__),
+               'index.html')
+         self.response.out.write(
+               template.render(path, template_values))
 
       else:
          # Not logged in... Go log in then.
@@ -149,46 +137,68 @@ class UpdateTerm(webapp.RequestHandler):
 class MailUpdate(webapp.RequestHandler):
    """Handle Gmail form update."""
    def post(self):
-      try:
-         pmid = self.request.get('pmid')
-         validate_pmid(pmid)
-      except DataException:
-         # Hacked!
-         return
-
       user = users.get_current_user()
       data = UserData.gql('WHERE ANCESTOR IS :1 AND user = :2',
             term_key(), user)
-
       try:
          user_data = data[0]
       except IndexError:
-         # Hacked!
+         # Hacked: to send the form, Gmail must be open
+         # and the user logged in.
          return
 
       if not user.nickname() == self.request.get('user'):
-         # Hacked!
+         # Mistake: user responds to a mail addressed
+         # to another user.
          return
 
-      if not pmid in user_data.relevant_abstracts + \
-            user_data.irrelevant_abstracts:
-         # Parse the title.
-         title = self.request.get('title').lower()
-         words = get_words(title)
-         # Update user data...
-         if self.request.get('answer') == 'Yes':
-            user_data.relevant_abstracts = db.Text(
-                  user_data.relevant_abstracts + pmid + ':')
-            user_data.positive_terms = db.Text(
-                  user_data.positive_terms + ':'.join(words) + ':')
-         elif self.request.get('answer') == 'No':
-            user_data.irrelevant_abstracts = db.Text(
-                  user_data.irrelevant_abstracts + pmid + ':')
-            user_data.negative_terms = db.Text(
-                  user_data.negative_terms + ':'.join(words) + ':')
-         # ... and push.
-         user_data.put()
-         
+      prev = user_data.relevant_abstracts + \
+            user_data.irrelevant_abstracts
+      self.relevant_ids = self.irrelevant_ids = ''
+      self.relevant_titles = self.irrelevant_titles = ''
+
+      # Process the key/value terms. The keys consist of
+      # pmid:title, they are split before processing.
+      for name in self.request.arguments():
+         if not self.request.get(name) in ('Yes', 'No'):
+            # Not a Yes/No answer (e.g. user): skip.
+            continue
+         (pmid, title) = name.split(':', 1)
+         if pmid in prev + self.relevant_ids + self.irrelevant_ids:
+            # Abstract already marked: skip.
+            continue
+         if self.request.get(name) == 'Yes':
+            self.relevant_ids += pmid +  ':'
+            self.relevant_titles += title + ' '
+         elif self.request.get(name) == 'No':
+            self.irrelevant_ids += pmid + ':'
+            self.irrelevant_titles += title + ' '
+
+      try:
+         validate_pmid(self.relevant_ids)
+         validate_pmid(self.irrelevant_ids)
+      except DataException:
+         # Hacked: pmids have changed before POST.
+         return
+
+      self.user_update(user_data)
+
+   def user_update(self, user_data):
+      """Update user data after mail submission."""
+
+      # Update the positive and negative words...
+      user_data.positive_terms = db.Text(user_data.positive_terms + \
+            ':'.join(BayesianClass.to_words(self.relevant_titles)))
+      user_data.negative_terms = db.Text(user_data.negative_terms + \
+            ':'.join(BayesianClass.to_words(self.irrelevant_titles)))
+      # ... the list of marked abstracts...
+      user_data.relevant_abstracts = db.Text(
+            user_data.relevant_abstracts + self.relevant_ids)
+      user_data.irrelevant_abstracts = db.Text(
+            user_data.irrelevant_abstracts + self.irrelevant_ids)
+      # ... and push.
+      user_data.put()
+
 
 application = webapp.WSGIApplication([
   ('/', MainPage),
