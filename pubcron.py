@@ -6,7 +6,6 @@ import urllib
 import wsgiref.handlers
 
 import eUtils
-import BayesianClass
 
 from google.appengine.api import users
 from google.appengine.ext import webapp
@@ -21,8 +20,8 @@ class UserData(db.Model):
    term = db.StringProperty()
    term_valid = db.BooleanProperty()
    last_run = db.DateTimeProperty()
-   relevant_abstracts = db.TextProperty()
-   irrelevant_abstracts = db.TextProperty()
+   relevant_ids = db.TextProperty()
+   irrelevant_ids = db.TextProperty()
    positive_terms = db.TextProperty()
    negative_terms = db.TextProperty()
 
@@ -74,12 +73,12 @@ class MainPage(webapp.RequestHandler):
             # First user visit: create user data.
             user_data = UserData(term_key())
             user_data.user = user
-            user_data.relevant_abstracts = db.Text(u':')
-            user_data.irrelevant_abstracts = db.Text(u':')
+            user_data.relevant_ids = db.Text(u':')
+            user_data.irrelevant_ids = db.Text(u':')
             user_data.positive_terms = db.Text(u':')
             user_data.negative_terms = db.Text(u':')
             user_data.put()
-   
+
          template_values = {
             'user_data': user_data,
             'user_email': user.email(),
@@ -93,7 +92,7 @@ class MainPage(webapp.RequestHandler):
       else:
          # Not logged in... Go log in then.
          self.redirect(users.create_login_url(self.request.uri))
-   
+
 
 class UpdateTerm(webapp.RequestHandler):
    """Handle user term update."""
@@ -152,50 +151,51 @@ class MailUpdate(webapp.RequestHandler):
          # to another user.
          return
 
-      prev = user_data.relevant_abstracts + \
-            user_data.irrelevant_abstracts
-      self.relevant_ids = self.irrelevant_ids = ''
-      self.relevant_titles = self.irrelevant_titles = ''
+      prev = user_data.relevant_ids + \
+            user_data.irrelevant_ids
+      relevant_ids = ''
+      irrelevant_ids = ''
+      positive_terms = ''
+      negative_terms = ''
 
       # Process the key/value terms. The keys consist of
       # pmid:title, they are split before processing.
       for name in self.request.arguments():
          if not self.request.get(name) in ('Yes', 'No'):
-            # Not a Yes/No answer (e.g. user): skip.
+            # Not a Yes/No answer (e.g. user, or NA): skip.
             continue
-         (pmid, title) = name.split(':', 1)
-         if pmid in prev + self.relevant_ids + self.irrelevant_ids:
+         (pmid, terms) = name.split(':', 1)
+         if pmid in prev + relevant_ids + irrelevant_ids:
             # Abstract already marked: skip.
             continue
-         if self.request.get(name) == 'Yes':
-            self.relevant_ids += pmid +  ':'
-            self.relevant_titles += title + ' '
-         elif self.request.get(name) == 'No':
-            self.irrelevant_ids += pmid + ':'
-            self.irrelevant_titles += title + ' '
+         if request.get(name) == 'Yes':
+            relevant_ids += pmid +  ':'
+            positive_terms += terms + ':'
+         elif request.get(name) == 'No':
+            irrelevant_ids += pmid + ':'
+            negative_terms += terms + ':'
 
       try:
-         validate_pmid(self.relevant_ids)
-         validate_pmid(self.irrelevant_ids)
+         validate_pmid(relevant_ids + irrelevant_ids)
       except DataException:
          # Hacked: pmids have changed before POST.
          return
 
-      self.user_update(user_data)
-
-   def user_update(self, user_data):
-      """Update user data after mail submission."""
 
       # Update the positive and negative words...
-      user_data.positive_terms = db.Text(user_data.positive_terms + \
-            ':'.join(BayesianClass.to_words(self.relevant_titles)))
-      user_data.negative_terms = db.Text(user_data.negative_terms + \
-            ':'.join(BayesianClass.to_words(self.irrelevant_titles)))
+      user_data.positive_terms = db.Text(
+            user_data.positive_terms + positive_terms
+         )
+      user_data.negative_terms = db.Text(
+            user_data.negative_terms + negative_terms
+         )
       # ... the list of marked abstracts...
-      user_data.relevant_abstracts = db.Text(
-            user_data.relevant_abstracts + self.relevant_ids)
-      user_data.irrelevant_abstracts = db.Text(
-            user_data.irrelevant_abstracts + self.irrelevant_ids)
+      user_data.relevant_ids = db.Text(
+            user_data.relevant_ids + relevant_ids
+         )
+      user_data.irrelevant_ids = db.Text(
+            user_data.irrelevant_ids + irrelevant_ids
+         )
       # ... and push.
       user_data.put()
 

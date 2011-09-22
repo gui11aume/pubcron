@@ -15,3 +15,17 @@ def to_words(string):
    string  = re.sub(' [0-9]+ ', ' ', string)
    # Split, remove stopwords.
    return [w for w in string.split(' ') if not w in stopw]
+
+def update_score(abstr_list, rlvt, irlvt, pos, neg):
+   for abstr in abstr_list:
+      words = to_words(abstr.title)
+      ab.words = ':'.join(words)
+      score = 0.1 # Fraction relevant abstracts
+      try:
+         for w in words:
+            score *= pos.count(w)*(irlvt+1) / neg.count(w)*(rlvt+1)
+         ab.score = '%.2f' % score
+      except ZeroDivisionError:
+         ab.score = 'inf'
+
+

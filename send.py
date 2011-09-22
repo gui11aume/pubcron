@@ -4,7 +4,7 @@ import datetime
 import eUtils
 
 from pubcron import UserData, term_key
-from BayesianClass import to_words
+from BayesianClass import update_score
 
 from google.appengine.api import users
 from google.appengine.ext import webapp
@@ -28,9 +28,9 @@ class Despatcher(webapp.RequestHandler):
       # DEBUG
       admin = cron = ''
       if users.is_current_user_admin():
-         admin = admin
+         admin = 'admin'
       if self.request.headers.get("X-AppEngine-Cron"):
-         cron = cron
+         cron = 'cron'
 
       # Get all user data.
       data = UserData.gql("WHERE ANCESTOR IS :1", term_key())
@@ -63,20 +63,13 @@ class Despatcher(webapp.RequestHandler):
             raw = eUtils.toAbstr(eUtils.fetch_abstracts(term))
             abstr_list = [h for h in raw if not h.fail]
 
-
-            #########################################
-            #TODO: Move this part to some other place.
-            # ... and of course code it better.
-            #########################################
-            r = (1 + len(user_data.irrelevant_abstracts.split(':'))) / (1 + len(user_data.relevant_abstracts.split(':')))
-            for ab in abstr_list:
-               words = to_words(ab.title)
-               score = 0.1 # Fraction relevant abstracts
-               for w in words:
-                  p = 1 + user_data.positive_terms.count(w)
-                  q = 1 + user_data.negative_terms.count(w)
-                  score *= r*p/q
-               ab.score = '%.2f' % score
+            update_score(
+                  abstr_list,
+                  len(user_data.relevant_ids.split(':')),
+                  len(user_data.irrelevant_ids.split(':')),
+                  user_data.positive_terms,
+                  user_data.negative_terms
+               )
 
             template_values = {
                'user': user_data.user.nickname(),
