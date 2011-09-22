@@ -78,8 +78,8 @@ class Despatcher(webapp.RequestHandler):
             path = os.path.join(os.path.dirname(__file__), 'hits.html')
             subject = "Recently on PubMed"
             # DEBUG
-            if admin or cron:
-               subject += " -- % %" % (admin, cron)
+#            if admin or cron:
+#               subject += " -- % %" % (admin, cron)
          except eUtils.PubMedException, error:
             template_values = {
                'pair_list': error.pair_list
@@ -91,7 +91,7 @@ class Despatcher(webapp.RequestHandler):
             continue
          except Exception, err:
             # For other exceptions, send a mail to amdin.
-            mail_admin(str(user_data.user.nickname), "%s" % str(err))
+            mail_admin(str(user_data.user.nickname()), str(err))
             # And skip user mail.
             continue
 

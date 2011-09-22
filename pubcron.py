@@ -168,10 +168,10 @@ class MailUpdate(webapp.RequestHandler):
          if pmid in prev + relevant_ids + irrelevant_ids:
             # Abstract already marked: skip.
             continue
-         if request.get(name) == 'Yes':
+         if self.request.get(name) == 'Yes':
             relevant_ids += pmid +  ':'
             positive_terms += terms + ':'
-         elif request.get(name) == 'No':
+         elif self.request.get(name) == 'No':
             irrelevant_ids += pmid + ':'
             negative_terms += terms + ':'
 
