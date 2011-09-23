@@ -21,11 +21,9 @@ def update_score(abstr_list, rlvt, irlvt, pos, neg):
       words = to_words(abstr.title)
       abstr.words = ':'.join(words)
       score = 0.1 # Fraction relevant abstracts
-      try:
-         for w in words:
+      for w in words:
+         if w in pos and w in neg:
             score *= pos.count(w)*(irlvt+1) / neg.count(w)*(rlvt+1)
-         abstr.score = '%.2f' % score
-      except ZeroDivisionError:
-         abstr.score = '*'
+      abstr.score = '%.2f' % score
 
 
