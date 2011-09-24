@@ -13,6 +13,7 @@ from google.appengine.api import mail
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
+
 def mail_admin(user, error):
    mail.send_mail("pubcron.mailer@gmail.com",
                   "pubcron.mailer@gmail.com",

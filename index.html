@@ -4,24 +4,30 @@
     <link type="text/css" rel="stylesheet" href="stylesheets/main.css" />
   </head>
   <body>
-    <div id="band"><div id="header"><h1>Pub<span class="cron">Cron</span></h1></div></div>
+    <div id="band">
+      <div id="linea"></div>
+      <div id="lineb"></div>
+      <div id="linec"></div>
+    </div>
     <div id="spacer"></div>
     <div id="main_container">
-    <div id="left_band"></div>
-    <div id="main">
+      <div id="body">
+      <h1>PubCron</h1>
+      <h2>Evolutive PubMed feeds</h2>
     <div id="user_info">
+    {% if mailupdate %}
+    <span class="mailupdate">Your data has been updated.</span><br /></br />
+    {% endif %}
     {% if user_data.term %}
-      Your PubMed query term as
-      <span class="login">{{ user_data.user.nickname }}</span> is<br />
-      <span class="term">{{ user_data.term }}</span>
+      Your PubMed query term is
+      <p class="bw">
+        <span class="term">{{ user_data.term }}</span>
+      </p>
       {% if user_data.term_valid %}
       <span class="valid">(valid)</span>
       {% else %}
       <span class="invalid">(not valid)</span>
       {% endif %}
-    {% else %}
-      You are logged in as
-      <span id="login">{{ user_data.user.nickname }}</span>.
     {% endif %}
     
     </div>
@@ -33,17 +39,18 @@
       <input type="text" name="term" size="40">
       <input type="submit" value="Submit">
     </form>
-    <span style="font-size:80%">Example:</span>
-    <span class="term">nature[journal]+OR+science[journal]</span>
+    <span style="font-size:80%; font-weight:bold;">Examples:</span>
+    <p class="bw"><span class="term">nature[journal]+OR+science[journal]</span></p>
+    <p class="bw"><span class="term">(nature[journal]+OR+nature+biotechnology[journal]+OR+science[journal]+OR+cell[journal]+OR+chromatin[all])+AND+english[language]+AND+journal+article[ptyp]</span></p>
 
     </div>
 
     <div id="footer">
-    The query results will be sent to
+      The query results will be sent to <br />
     <span class="login">{{ user_email }}</span>.
     </div>
+    </div> <!-- end body -->
     </div> <!-- end main_container -->
-    </div> <!-- end main -->
 
   </body>
 </html>

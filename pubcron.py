@@ -13,7 +13,6 @@ from google.appengine.ext import db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-
 class UserData(db.Model):
    """Store user term query and date lat run."""
    user = db.UserProperty()
@@ -121,7 +120,7 @@ class UpdateTerm(webapp.RequestHandler):
                eUtils.NoHitException):
             # Term error, PubMed error or no nit: We keep
             # 'success' as False.
-            pass 
+            pass
          except Exception:
             # Something else happened.
             #TODO: issue a warning.
@@ -199,6 +198,17 @@ class MailUpdate(webapp.RequestHandler):
       # ... and push.
       user_data.put()
 
+      template_values = {
+            'user_data': user_data,
+      }
+
+      path = os.path.join(os.path.dirname(__file__),
+            'update.html')
+      self.response.out.write(
+            template.render(path, template_values))
+
+   def get(self):
+      self.redirect('/')
 
 application = webapp.WSGIApplication([
   ('/', MainPage),

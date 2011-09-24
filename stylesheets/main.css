@@ -2,20 +2,30 @@ body {
   font-family:serif;
 }
 h1 {
-  margin-top:0px;
-  color:white;
   font-weight:bold;
   font-size:48;
+  margin-bottom:5px;
+}
+h2 {
+  margin-top:0px;
+  font-weight:bold;
+  font-size:20;
+  margin-bottom:2em;
 }
 #band {
-  position:relative;
-  background-color:006633;
-  height:80px;
+  height:15px;
 }
-#header {
-  position:absolute;
-  line-height:80px;
-  left:20px;
+#linea {
+  height:5px;
+  background-color:006633;
+}
+#lineb {
+  height:5px;
+  background-color:009933;
+}
+#linec {
+  height:5px;
+  background-color:99CC99;
 }
 #spacer{
   height:10px;
@@ -23,16 +33,11 @@ h1 {
 #main_container {
   position:relative;
 }
-#left_band {
-  background-color:FF6600;
-  width:135px;
-  height:80%;
-}
-#main {
+#body {
   position:absolute;
-  height:80%;
-  left:200px;
-  top:70px;
+  left:20%;
+  top:40px;
+  width:500px;
 }
 #submit_area {
   margin-top:2em;
@@ -40,20 +45,17 @@ h1 {
 #footer {
   margin-top:2em;
 }
-#logout_button {
-  position:relative;
-  top:40px;
-  left:170px;
-}
-.login {
-  color:FF6600;
-  font-weight:bold;
-}
-.cron {
-  color:FFCC99;
+.bw {
+  width:495px;
+  word-wrap:break-word;
+  margin-top:0px;
+  margin-bottom:1em;
 }
 .term {
   font-family:monospace;
+}
+.login {
+  font-weight:bold;
 }
 .valid {
   color:green;
@@ -61,4 +63,8 @@ h1 {
 .invalid {
   font-weight:bold;
   color:red;
+}
+.mailupdate {
+  font-weight:bold;
+  color:green;
 }
