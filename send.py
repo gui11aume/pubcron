@@ -62,7 +62,9 @@ class Despatcher(webapp.RequestHandler):
          # Fetch the abstracts.
          try:
             raw = eUtils.toAbstr(eUtils.fetch_abstracts(term))
-            abstr_list = [h for h in raw if not h.fail]
+            # Get the parsed abstracts with a body.
+            #TODO: Check the fails.
+            abstr_list = [a for a in raw if a.body and not a.fail]
 
             update_score(
                   abstr_list,
