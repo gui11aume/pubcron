@@ -4,7 +4,7 @@ import datetime
 import eUtils
 
 from pubcron import UserData, term_key
-from BayesianClass import update_score
+from Classify import update_score
 
 from google.appengine.api import users
 from google.appengine.ext import webapp
@@ -13,11 +13,11 @@ from google.appengine.api import mail
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-def mail_admin(user, message):
+def mail_admin(user, error):
    mail.send_mail("pubcron.mailer@gmail.com",
                   "pubcron.mailer@gmail.com",
                   "Pubcron mail report",
-                  "User %s:\n%s" % (user, message))
+                  "User %s:\n%s" % (user, str(error)))
 
 class Despatcher(webapp.RequestHandler):
    """Called by the cron scheduler. Query PubMed with all the
@@ -73,11 +73,11 @@ class Despatcher(webapp.RequestHandler):
 
             template_values = {
                'user': user_data.user.nickname(),
-               'abstr_list': abstr_list
+               'abstr_list': sorted(abstr_list, reverse=True)
             }
             path = os.path.join(os.path.dirname(__file__), 'hits.html')
             subject = "Recently on PubMed"
-            # DEBUG
+            #TODO: this lines causes an error. Why?
 #            if admin or cron:
 #               subject += " -- % %" % (admin, cron)
          except eUtils.PubMedException, error:
@@ -89,9 +89,9 @@ class Despatcher(webapp.RequestHandler):
          except eUtils.NoHitException:
             # Skip user mail if no hit.
             continue
-         except Exception, err:
+         except Exception, e:
             # For other exceptions, send a mail to amdin.
-            mail_admin(str(user_data.user.nickname()), str(err))
+            mail_admin(str(user_data.user.nickname()), e)
             # And skip user mail.
             continue
 
