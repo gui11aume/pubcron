@@ -164,10 +164,10 @@ def toAbstr(xml):
    return [Abstr(node) for node in _nodes(minidom.parseString(xml), \
          "PubmedArticle")]
 
-def fetch_abstracts(term):
+def fetch_abstracts(term, **kwargs):
    """Query PubMed and return PubmedArticleSet in (non parsed)
    XMLformat, or None if no hit."""
-   xmldoc = robust_eSearch_query(term)
+   xmldoc = robust_eSearch_query(term, **kwargs)
    return eFetch_query(
          key = _child_of(_node(xmldoc, "eSearchResult"), \
                "QueryKey").firstChild.data,
@@ -183,7 +183,7 @@ def eFetch_query(key, webenv):
          + "&retmode=xml").read()
 
 
-def robust_eSearch_query(term):
+def robust_eSearch_query(term, **kwargs):
    """Robust eSearch query is carried out in two steps: the first
    request returns hit count and meta information (PubMed query
    translation, errors, warnings etc.) on which error checking
@@ -191,8 +191,11 @@ def robust_eSearch_query(term):
    "usehistory=y", producing QueryKey and WebEnv output fields that
    can be used for future requests or passed on to eFetch."""
    # Initial query to check for errors and get hit count.
-   xmldoc = minidom.parseString(eSearch_query(term=term,
-         usehistory=False, retmax=0))
+   xmldoc = minidom.parseString(eSearch_query(
+         term=term,
+         usehistory=False,
+         retmax=0,
+         **kwargs))
    # Check for PubMedExceptions. Return the xml result for diagnostic in
    # case of ErrorList tag.
    if _nodes(xmldoc, "ErrorList"):
@@ -216,10 +219,13 @@ def robust_eSearch_query(term):
          usehistory=True, retmax=count))
 
 
-def eSearch_query(term, usehistory=False, retmax=0):
+def eSearch_query(term, usehistory=False, retmax=0, **kwargs):
    """Basic error-prone eSearch query."""
-   usehistory = "&usehistory=y" if usehistory else ""
+   usehistory = '&usehistory=y' if usehistory else ''
+   extrargs = '&' + urllib.urlencode(kwargs) if kwargs else ''
    return urllib2.urlopen(BASE + "esearch.fcgi?db=pubmed" \
-        + "&term=" + term \
+        + '&term=' + term \
         + usehistory \
-        + "&retmax=" + str(retmax)).read()
+        + '&retmax=' + str(retmax) \
+        + extrargs
+        ).read()

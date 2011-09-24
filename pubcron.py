@@ -58,7 +58,6 @@ def validate_pmid(idlist):
 
 class MainPage(webapp.RequestHandler):
    def get(self):
-
       # Already logged in?
       user = users.get_current_user()
 
