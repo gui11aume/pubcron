@@ -3,16 +3,20 @@
 import sys
 import urllib
 import urllib2
-import datetime as dt
 
 from xml.dom import minidom
 
+
 ## CONSTANTS ##
 BASE = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
-RETMAX = 5000
+RETMAX = 5000 # Limit on XML abstracts retrieval.
+
 
 # Convenience XML extraction functions.
 def _unlist_or_raise(nodelist, tag):
+   """Return the first element of a list if length is
+   1, empty string if list is empty, or fail withs
+   MultipleTagsException if length is greater thana 1."""
    if len(nodelist) > 1:
       raise MultipleTagsException(tag)
    try:
@@ -21,12 +25,17 @@ def _unlist_or_raise(nodelist, tag):
       return u''
 
 def _nodes(node, tag):
+   """Return a list of XML nodes with given tag."""
    return node.getElementsByTagName(tag)
 
 def _node(node, tag):
+   """Return the content of an XML node with given
+   tag if unique, otherwise fail with MultipleTagsException."""
    return _unlist_or_raise(_nodes(node, tag), tag)
 
 def _data(node, tag):
+   """Return the data content of a node with given
+   tag if unique, otherwise fail with MultipleTagsException."""
    extract = _unlist_or_raise(_nodes(node, tag), tag)
    try:
       return extract.firstChild.data if extract else u''
@@ -35,6 +44,8 @@ def _data(node, tag):
       return u''
 
 def _child_of(node, tag):
+   """Return the first direct XML child node of given node
+   with given tag."""
    for child in _nodes(node, tag):
       if child.parentNode is node: return child
 
@@ -44,7 +55,7 @@ def _child_of(node, tag):
 ######          Exceptions          ######
 ##########################################
 
-# eSearch Exceptions.
+# eSearch/PubMed Exceptions.
 class eSearchException(Exception):
    pass
 
@@ -55,18 +66,7 @@ class NoHitException(eSearchException):
    pass
 
 class PubMedException(eSearchException):
-   def __init__(self, pair_list):
-      class ErrorPair:
-         pass
-      self.pair_list = []
-      for pair in pair_list:
-         o = ErrorPair()
-         o.term = str(pair[0])
-         o.message = str(pair[1])
-         self.pair_list.append(o)
-
-   def __str__(self):
-      return str(self.pair_list)
+   pass
 
 # XML Exceptions.
 class XMLException(Exception):
@@ -108,7 +108,7 @@ class Abstr:
          self.ref =  _data(jnode, "Volume") + \
                brack(_data(jnode, "Issue")) + ":" + \
                _data(abstr, "MedlinePgn")
-         
+
          self.pubtypes = [node.firstChild.data for node in \
               _nodes(abstr, "PublicationType")]
 
@@ -143,6 +143,15 @@ class Abstr:
          # Construction succeeded.
          self.fail = False
 
+   def __lt__(self, other):
+      """Allow sorting of abstracts. Note that upon construction,
+      instances of Abstr have no 'score' attribute so this will
+      raise an AttributeError."""
+      return self.score < other.score
+
+   def set_score(self, score):
+      """Set the 'score' attribute of an instance of Abstr."""
+      self.score = score
 
 
 ##########################################
@@ -155,10 +164,10 @@ def toAbstr(xml):
    return [Abstr(node) for node in _nodes(minidom.parseString(xml), \
          "PubmedArticle")]
 
-def fetch_abstracts(term):
+def fetch_abstracts(term, **kwargs):
    """Query PubMed and return PubmedArticleSet in (non parsed)
    XMLformat, or None if no hit."""
-   xmldoc = robust_eSearch_query(term)
+   xmldoc = robust_eSearch_query(term, **kwargs)
    return eFetch_query(
          key = _child_of(_node(xmldoc, "eSearchResult"), \
                "QueryKey").firstChild.data,
@@ -174,7 +183,7 @@ def eFetch_query(key, webenv):
          + "&retmode=xml").read()
 
 
-def robust_eSearch_query(term):
+def robust_eSearch_query(term, **kwargs):
    """Robust eSearch query is carried out in two steps: the first
    request returns hit count and meta information (PubMed query
    translation, errors, warnings etc.) on which error checking
@@ -182,11 +191,15 @@ def robust_eSearch_query(term):
    "usehistory=y", producing QueryKey and WebEnv output fields that
    can be used for future requests or passed on to eFetch."""
    # Initial query to check for errors and get hit count.
-   xmldoc = minidom.parseString(eSearch_query(term=term,
-         usehistory=False, retmax=0))
+   xmldoc = minidom.parseString(eSearch_query(
+         term=term,
+         usehistory=False,
+         retmax=0,
+         **kwargs))
    # Check for PubMedExceptions. Return the xml result for diagnostic in
    # case of ErrorList tag.
    if _nodes(xmldoc, "ErrorList"):
+      # Send a pairlist as args to PubMedException.
       translation = _data(xmldoc, "QueryTranslation")
       report = [(u"Term (as queried)", term.encode('utf-8')), \
             (u"QueryTranslation", translation)]
@@ -206,10 +219,13 @@ def robust_eSearch_query(term):
          usehistory=True, retmax=count))
 
 
-def eSearch_query(term, usehistory=False, retmax=0):
+def eSearch_query(term, usehistory=False, retmax=0, **kwargs):
    """Basic error-prone eSearch query."""
-   usehistory = "&usehistory=y" if usehistory else ""
+   usehistory = '&usehistory=y' if usehistory else ''
+   extrargs = '&' + urllib.urlencode(kwargs) if kwargs else ''
    return urllib2.urlopen(BASE + "esearch.fcgi?db=pubmed" \
-        + "&term=" + term \
+        + '&term=' + term \
         + usehistory \
-        + "&retmax=" + str(retmax)).read()
+        + '&retmax=' + str(retmax) \
+        + extrargs
+        ).read()

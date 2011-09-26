@@ -4,7 +4,7 @@ import datetime
 import eUtils
 
 from pubcron import UserData, term_key
-from BayesianClass import update_score
+from Classify import update_score
 
 from google.appengine.api import users
 from google.appengine.ext import webapp
@@ -13,25 +13,17 @@ from google.appengine.api import mail
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-def mail_admin(user, message):
+
+def mail_admin(user, error):
    mail.send_mail("pubcron.mailer@gmail.com",
                   "pubcron.mailer@gmail.com",
                   "Pubcron mail report",
-                  "User %s:\n%s" % (user, message))
+                  "User %s:\n%s" % (user, str(error)))
 
 class Despatcher(webapp.RequestHandler):
    """Called by the cron scheduler. Query PubMed with all the
    saved user terms and send them a mail."""
-
    def get(self):
-
-      # DEBUG
-      admin = cron = ''
-      if users.is_current_user_admin():
-         admin = 'admin'
-      if self.request.headers.get("X-AppEngine-Cron"):
-         cron = 'cron'
-
       # Get all user data.
       data = UserData.gql("WHERE ANCESTOR IS :1", term_key())
 
@@ -60,8 +52,13 @@ class Despatcher(webapp.RequestHandler):
 
          # Fetch the abstracts.
          try:
-            raw = eUtils.toAbstr(eUtils.fetch_abstracts(term))
-            abstr_list = [h for h in raw if not h.fail]
+            raw = eUtils.toAbstr(eUtils.fetch_abstracts(
+                  term = term,
+                  email = user_data.user.email()
+               ))
+            # Get the parsed abstracts with a body.
+            #TODO: Check the fails.
+            abstr_list = [a for a in raw if a.body and not a.fail]
 
             update_score(
                   abstr_list,
@@ -73,13 +70,10 @@ class Despatcher(webapp.RequestHandler):
 
             template_values = {
                'user': user_data.user.nickname(),
-               'abstr_list': abstr_list
+               'abstr_list': sorted(abstr_list, reverse=True)
             }
             path = os.path.join(os.path.dirname(__file__), 'hits.html')
             subject = "Recently on PubMed"
-            # DEBUG
-#            if admin or cron:
-#               subject += " -- % %" % (admin, cron)
          except eUtils.PubMedException, error:
             template_values = {
                'pair_list': error.pair_list
@@ -89,9 +83,9 @@ class Despatcher(webapp.RequestHandler):
          except eUtils.NoHitException:
             # Skip user mail if no hit.
             continue
-         except Exception, err:
+         except Exception, e:
             # For other exceptions, send a mail to amdin.
-            mail_admin(str(user_data.user.nickname()), str(err))
+            mail_admin(str(user_data.user.nickname()), e)
             # And skip user mail.
             continue
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+from math import log
 
 # Here-list of title stop-words.
 stopw = ('and', 'the', 'of', 'a', 'in', 'to', 'at', 'by',
@@ -17,13 +18,20 @@ def to_words(string):
    return [w for w in string.split(' ') if not w in stopw]
 
 def update_score(abstr_list, rlvt, irlvt, pos, neg):
+   pos = pos.split(':')
+   neg = neg.split(':')
+   # Initial log-ratio (relevant fraction).
+   init_logratio = log(1 + rlvt) - log(2 + rlvt + irlvt)
+   # Constant Bayesian log-ratio.
+   clogratio = log(len(neg_terms) + len(set(neg_terms))) - \
+         log(len(pos) + len(set(neg)))
    for abstr in abstr_list:
       words = to_words(abstr.title)
-      abstr.words = ':'.join(words)
-      score = 0.1 # Fraction relevant abstracts
+      # Compute the Bayesian score.
+      score = init_logratio
       for w in words:
-         if w in pos and w in neg:
-            score *= pos.count(w)*(irlvt+1) / neg.count(w)*(rlvt+1)
-      abstr.score = '%.2f' % score
-
-
+         score += clogratio + log(1 + pos.count(w)) - \
+               log(1 + neg.count(w))
+      # Set 'words' and 'score' attributes.
+      abstr.words = ':'.join(words)
+      abstr.score = round(score, 2)
