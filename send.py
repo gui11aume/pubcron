@@ -81,12 +81,6 @@ class Despatcher(webapp.RequestHandler):
             path = os.path.join(os.path.dirname(__file__), 'error.html')
             subject = "Error report: pubcron"
          except eUtils.NoHitException:
-            mail.send_mail(
-                  user_data.user.email(),
-                  "pubcron.mailer@gmail.com",
-                  "No PubCron hit today",
-                  ":-("
-               )
             continue
          except Exception, e:
             # For other exceptions, send a mail to amdin.
