@@ -58,14 +58,14 @@ class Despatcher(webapp.RequestHandler):
                ))
             # Get the parsed abstracts with a body.
             #TODO: Check the fails.
-            abstr_list = [a for a in raw if a.body and not a.fail]
+            abstr_list = [a for a in raw if not a.fail and a.body]
 
             update_score(
                   abstr_list,
                   len(user_data.relevant_ids.split(':')),
                   len(user_data.irrelevant_ids.split(':')),
-                  user_data.positive_terms,
-                  user_data.negative_terms
+                  user_data.positive_terms.split(':'),
+                  user_data.negative_terms.split(':')
                )
 
             template_values = {

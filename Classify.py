@@ -18,12 +18,10 @@ def to_words(string):
    return [w for w in string.split(' ') if not w in stopw]
 
 def update_score(abstr_list, rlvt, irlvt, pos, neg):
-   pos = pos.split(':')
-   neg = neg.split(':')
    # Initial log-ratio (relevant fraction).
    init_logratio = log(1 + rlvt) - log(2 + rlvt + irlvt)
    # Constant Bayesian log-ratio.
-   clogratio = log(len(neg_terms) + len(set(neg_terms))) - \
+   clogratio = log(len(neg) + len(set(neg))) - \
          log(len(pos) + len(set(neg)))
    for abstr in abstr_list:
       words = to_words(abstr.title)

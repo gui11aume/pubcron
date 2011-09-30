@@ -17,15 +17,15 @@ h2 {
 }
 #linea {
   height:5px;
-  background-color:006633;
+  background-color:#006633; // dark green
 }
 #lineb {
   height:5px;
-  background-color:009933;
+  background-color:#009933; // green
 }
 #linec {
   height:5px;
-  background-color:99CC99;
+  background-color:#99CC99; //pale green
 }
 #spacer{
   height:10px;
@@ -37,7 +37,7 @@ h2 {
   position:absolute;
   left:20%;
   top:40px;
-  width:500px;
+  width:495px;
 }
 #submit_area {
   margin-top:2em;
@@ -45,14 +45,15 @@ h2 {
 #footer {
   margin-top:2em;
 }
-.bw {
+.breakword {
+  font-family:monospace;
+  background-color:#E0E0E0; // gray
   width:495px;
   word-wrap:break-word;
   margin-top:0px;
   margin-bottom:1em;
 }
 .term {
-  font-family:monospace;
 }
 .login {
   font-weight:bold;
