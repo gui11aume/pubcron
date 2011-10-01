@@ -57,7 +57,7 @@ class Despatcher(webapp.RequestHandler):
                   email = user_data.user.email()
                ))
             # Get the parsed abstracts with a body.
-            #TODO: Check the fails.
+            # TODO: Check the fails.
             abstr_list = [a for a in raw if not a.fail and a.body]
 
             update_score(
