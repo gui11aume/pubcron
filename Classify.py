@@ -17,13 +17,13 @@ def to_words(string):
    # Split, remove stopwords.
    return [w for w in string.split(' ') if not w in stopw]
 
-def update_score(abstr_list, rlvt, irlvt, pos, neg):
+def update_score(Abstr_list, rlvt, irlvt, pos, neg):
    # Initial log-ratio (relevant fraction).
    init_logratio = log(1 + rlvt) - log(2 + rlvt + irlvt)
    # Constant Bayesian log-ratio.
    clogratio = log(len(neg) + len(set(neg))) - \
          log(len(pos) + len(set(neg)))
-   for abstr in abstr_list:
+   for abstr in Abstr_list:
       words = to_words(abstr.title)
       # Compute the Bayesian score.
       score = init_logratio

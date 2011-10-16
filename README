@@ -1,1 +1,3 @@
 pubcron allows users to set up a cron task that routinely performs a PubMed (http://www.ncbi.nlm.nih.gov/pubmed/) query and sends them the abstract by mail.
+
+It is deployed at http://pubcron.appspot.com on Google App Engine. 
