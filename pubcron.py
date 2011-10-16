@@ -112,9 +112,6 @@ class UpdateTerm(webapp.RequestHandler):
             validate_term(user_data.term)
             eUtils.robust_eSearch_query(user_data.term)
             success = True
-         except eUtils.RetMaxExceeded:
-            # Too many hits... That's good.
-            success = True
          except (TermException, eUtils.PubMedException,
                eUtils.NoHitException):
             # Term error, PubMed error or no nit: We keep

@@ -25,8 +25,14 @@ def mail_admin(user, error):
 class Despatcher(webapp.RequestHandler):
    """Called by the cron scheduler. Query PubMed with all the
    saved user terms and send them a mail."""
+
    def get(self):
-      # Get all user data.
+
+      # Path to the mail html template.
+      path_to_hits = os.path.join(os.path.dirname(__file__),
+            'hits.html')
+
+      # Get all users data.
       data = UserData.gql("WHERE ANCESTOR IS :1", term_key())
 
       for user_data in data:
@@ -41,62 +47,64 @@ class Despatcher(webapp.RequestHandler):
          if not user_data.term_valid:
             continue
 
-         path = None
-         subject = None
-
          yesterday = datetime.datetime.today() + \
                datetime.timedelta(days=-1)
          date_from = last_run or yesterday
          date_to = max(yesterday, date_from)
+
+################################
+# DEBUG
+         if user_data.user.nickname() != 'guillaume.filion':
+            continue
+         date_from = datetime.datetime.today() + \
+               datetime.timedelta(days=-4)
+         date_to = datetime.datetime.today() + \
+               datetime.timedelta(days=-4)
+
+################################
+
          term = "("+term+")" + \
                date_from.strftime("+AND+(%Y%%2F%m%%2F%d:") + \
                date_to.strftime("%Y%%2F%m%%2F%d[crdt])")
 
          # Fetch the abstracts.
          try:
-            raw = eUtils.toAbstr(eUtils.fetch_abstracts(
+            Abstr_list = eUtils.fetch_Abstr(
                   term = term,
                   email = user_data.user.email()
-               ))
+               )
             # Get the parsed abstracts with a body.
-            # TODO: Check the fails.
-            # TODO: optimize (Google quotas exceeded).
-            abstr_list = [a for a in raw if not a.fail and a.body]
 
+            # Write the scores in place.
             update_score(
-                  abstr_list,
+                  Abstr_list,
                   len(user_data.relevant_ids.split(':')),
                   len(user_data.irrelevant_ids.split(':')),
                   user_data.positive_terms.split(':'),
                   user_data.negative_terms.split(':')
                )
-
             template_values = {
                'user': user_data.user.nickname(),
-               'abstr_list': sorted(abstr_list, reverse=True)
+               'Abstr_list': sorted(Abstr_list, reverse=True)
             }
-            path = os.path.join(os.path.dirname(__file__), 'hits.html')
-            subject = "Recently on PubMed"
-         except eUtils.PubMedException, error:
-            template_values = {
-               'pair_list': error.pair_list
-            }
-            path = os.path.join(os.path.dirname(__file__), 'error.html')
-            subject = "Error report: pubcron"
          except eUtils.NoHitException:
+            # No hit today. Better luck tomorrow :-)
             continue
          except Exception, e:
-            # For other exceptions, send a mail to amdin.
+            # For other exceptions (including PubMedExceptions), send
+            # a mail to amdin.
             mail_admin(str(user_data.user.nickname()), e)
             # And skip user mail.
             continue
 
-         # Create the email message (with hits or error report).
+         # Create the hits email message
          msg = mail.EmailMessage()
-         msg.initialize(to=user_data.user.email(),
-            sender="pubcron.mailer@gmail.com",
-            subject=subject, body="Message in HTML format.",
-            html=template.render(path, template_values))
+         msg.initialize(
+            to = user_data.user.email(),
+            sender = "pubcron.mailer@gmail.com",
+            subject = "Recently on PubMed",
+            body = "Message in HTML format.",
+            html = template.render(path_to_hits, template_values))
          msg.send()
 
 

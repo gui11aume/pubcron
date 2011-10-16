@@ -2,7 +2,7 @@
  <body>
   <form name="relevance" action="http://pubcron.appspot.com/mailupdate" method="post">
     <input type="hidden" name="user" value="{{ user }}" />
-  {% for abstr in abstr_list %}
+  {% for abstr in Abstr_list %}
     <span class="journal_date" style="font-zie:75%;">
     {{ abstr.journal }}. {{ abstr.pubdate }}
     </span><br />
@@ -11,9 +11,9 @@
     </span>
     <br />
     <span class="author_list" style="font-style:italic; font-size:80%;">
-      {{ abstr.initials }}.</span><br />
+      {{ abstr.authors }}.</span><br />
     <p class="abstract_body" style="text-indent:2em;">
-    {{ abstr.body }}
+    {{ abstr.text }}
     </p>
     Is this abstract relevant?
     <input type="radio" name="{{ abstr.pmid }}:{{ abstr.words }}" value="Yes" /> Yes
