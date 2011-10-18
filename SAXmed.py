@@ -10,8 +10,8 @@ class eSearchResultHandler(handler.ContentHandler):
    # Fields of interest.
    FIELDS = {
       ROOT + ('Count',): 'count',
-      ROOT + ('QueryKey',): 'querykey',
-      ROOT + ('WebEnv',): 'webenv'
+      ROOT + ('QueryKey',): 'query_key',
+      ROOT + ('WebEnv',): 'WebEnv'
    }
 
    def __init__(self, termdict):
@@ -29,19 +29,20 @@ class eSearchResultHandler(handler.ContentHandler):
          self.termdict['errors'] = []
 
    def endElement(self, name):
-      self.data = ''
-      self._stack.pop()
       if name == 'ErrorList': self._errors = False
 
       field = self.FIELDS.get(tuple(self._stack))
       # Update the given field by list-append.
       if field:
-         self.termdict[field] = self.data.strip()
+         self.termdict[field] = self.data
       if self._errors:
          # Within the "ErrorList" node.
          self.termdict['errors'].append(
                (self._stack[-1:], self.data.strip())
          )
+
+      self._stack.pop()
+      self.data = ''
 
    def characters(self, data):
       self.data += data
@@ -94,15 +95,17 @@ class eFetchResultHandler(handler.ContentHandler):
       if name == 'PubmedArticle': self.clear()
 
    def endElement(self, name):
-      self.data = ''
-      self._stack.pop()
 
       if name == 'PubmedArticle': self.wrap()
+
       field = self.FIELDS.get(tuple(self._stack))
       # Update the given field by list-append.
       if field:
          self._dict[field] = self._dict.get(field, []) + \
                [escape(self.data.strip())]
+
+      self._stack.pop()
+      self.data = ''
 
    def characters(self, data):
       self.data += data

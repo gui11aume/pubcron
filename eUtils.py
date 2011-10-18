@@ -8,12 +8,12 @@ from SAXmed import eFetchResultHandler, eSearchResultHandler
 from xml.sax import make_parser
 
 
-## CONSTANTS ##
+##########################################
+######          Constants           ######
+##########################################
 
 # Base link to eUtils.
 BASE = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
-# Limit on XML abstracts retrieval.
-RETMAX = 100
 
 
 ##########################################
@@ -35,7 +35,6 @@ class PubMedException(eSearchException):
 ######           Functions          ######
 ##########################################
 
-
 def fetch_Abstr(term, **kwargs):
    """Query PubMed and return a list of Abstr instances."""
 
@@ -49,26 +48,29 @@ def fetch_Abstr(term, **kwargs):
 def fetch_XML(term, **kwargs):
    """Query PubMed and return an XML stream."""
 
-   eSearch_query = {}
+   eFetch_params = kwargs
    parser = make_parser()
-   parser.setContentHandler(eSearchResultHandler(eSearch_query))
+   parser.setContentHandler(eSearchResultHandler(eFetch_params))
    parser.parse(robust_eSearch_query(term, **kwargs))
 
    # Plug-in the results of eSearch in eFetch.
-   return eFetch_query(**eSearch_query)
+   return eFetch_query(**eFetch_params)
 
 
-def eFetch_query(querykey, webenv, **kwargs):
+def eFetch_query(query_key, WebEnv, **kwargs):
    """Basic eFetch query through QueryKey and WebEnv.
    Return an XML stream."""
 
+   extrargs = ''.join(['&%s=%s' % it for it in kwargs.items()])
+
    return urllib2.urlopen(BASE + "efetch.fcgi?db=pubmed" \
-         + "&query_key=" + querykey \
-         + "&WebEnv=" + webenv \
+         + "&query_key=" + query_key \
+         + "&WebEnv=" + WebEnv \
+         + extrargs \
          + "&retmode=xml")
 
 
-def robust_eSearch_query(term, **kwargs):
+def robust_eSearch_query(term, retmax=float('inf'), **kwargs):
    """Robust eSearch query is carried out in two steps: the first
    request returns hit count and meta information (PubMed query
    translation, errors, warnings etc.) on which error checking
@@ -98,7 +100,7 @@ def robust_eSearch_query(term, **kwargs):
    return eSearch_query(
          term = term,
          usehistory = True,
-         retmax = min(count, RETMAX)
+         retmax = min(count, retmax)
    )
 
 

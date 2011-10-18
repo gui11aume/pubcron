@@ -15,6 +15,9 @@ from google.appengine.api import mail
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
+############
+RETMAX = 100
+
 
 def mail_admin(user, error):
    mail.send_mail("pubcron.mailer@gmail.com",
@@ -52,17 +55,6 @@ class Despatcher(webapp.RequestHandler):
          date_from = last_run or yesterday
          date_to = max(yesterday, date_from)
 
-################################
-# DEBUG
-         if user_data.user.nickname() != 'guillaume.filion':
-            continue
-         date_from = datetime.datetime.today() + \
-               datetime.timedelta(days=-4)
-         date_to = datetime.datetime.today() + \
-               datetime.timedelta(days=-4)
-
-################################
-
          term = "("+term+")" + \
                date_from.strftime("+AND+(%Y%%2F%m%%2F%d:") + \
                date_to.strftime("%Y%%2F%m%%2F%d[crdt])")
@@ -71,6 +63,8 @@ class Despatcher(webapp.RequestHandler):
          try:
             Abstr_list = eUtils.fetch_Abstr(
                   term = term,
+                  # Limit on all queries to keep it light.
+                  retmax = RETMAX,
                   email = user_data.user.email()
                )
             # Get the parsed abstracts with a body.
