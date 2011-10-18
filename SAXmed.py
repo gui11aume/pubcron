@@ -17,27 +17,34 @@ class eSearchResultHandler(handler.ContentHandler):
    def __init__(self, termdict):
       self._stack = []
       self._errors = False
+      self.data = ''
       # 'termdict' passed by reference.
       self.termdict = termdict
 
    def startElement(self, name, attrs):
+      self.data = ''
       self._stack.append(name)
       if name == 'ErrorList':
          self._errors = True
          self.termdict['errors'] = []
 
    def endElement(self, name):
+      self.data = ''
       self._stack.pop()
       if name == 'ErrorList': self._errors = False
 
-   def characters(self, content):
       field = self.FIELDS.get(tuple(self._stack))
       # Update the given field by list-append.
       if field:
-         self.termdict[field] = content
+         self.termdict[field] = self.data.strip()
       if self._errors:
          # Within the "ErrorList" node.
-         self.termdict['errors'].append((self._stack[-1:], content))
+         self.termdict['errors'].append(
+               (self._stack[-1:], self.data.strip())
+         )
+
+   def characters(self, data):
+      self.data += data
 
 
 class eFetchResultHandler(handler.ContentHandler):
@@ -77,23 +84,28 @@ class eFetchResultHandler(handler.ContentHandler):
       handler.ContentHandler.__init__(self)
       self._dict = {}
       self._stack = []
+      self.data = ''
       # 'abstr_list' passed by reference.
       self.abstr_list = abstr_list
 
    def startElement(self, name, attrs):
+      self.data = ''
       self._stack.append(name)
       if name == 'PubmedArticle': self.clear()
 
    def endElement(self, name):
+      self.data = ''
       self._stack.pop()
-      if name == 'PubmedArticle': self.wrap()
 
-   def characters(self, content):
+      if name == 'PubmedArticle': self.wrap()
       field = self.FIELDS.get(tuple(self._stack))
       # Update the given field by list-append.
       if field:
          self._dict[field] = self._dict.get(field, []) + \
-               [escape(content)]
+               [escape(self.data.strip())]
+
+   def characters(self, data):
+      self.data += data
 
    def clear(self):
       """Erase the dictionary."""
