@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import datetime
+import traceback
 
 import eUtils
 
@@ -19,11 +21,11 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 RETMAX = 100
 
 
-def mail_admin(user, error):
+def mail_admin(useremail, msg):
    mail.send_mail("pubcron.mailer@gmail.com",
                   "pubcron.mailer@gmail.com",
                   "Pubcron mail report",
-                  "User %s:\n%s" % (user, str(error)))
+                  "%s:\n%s" % (useremail, msg))
 
 class Despatcher(webapp.RequestHandler):
    """Called by the cron scheduler. Query PubMed with all the
@@ -39,6 +41,7 @@ class Despatcher(webapp.RequestHandler):
       data = UserData.gql("WHERE ANCESTOR IS :1", term_key())
 
       for user_data in data:
+
          term = str(user_data.term)
 
          # Update last time run.
@@ -66,7 +69,7 @@ class Despatcher(webapp.RequestHandler):
                   # Limit on all queries to keep it light.
                   retmax = RETMAX,
                   email = user_data.user.email()
-               )
+            )
             # Get the parsed abstracts with a body.
 
             # Write the scores in place.
@@ -87,7 +90,12 @@ class Despatcher(webapp.RequestHandler):
          except Exception, e:
             # For other exceptions (including PubMedExceptions), send
             # a mail to amdin.
-            mail_admin(str(user_data.user.nickname()), e)
+            msg = ''.join(traceback.format_exception(
+                  sys.exc_type,
+                  sys.exc_value,
+                  sys.exc_traceback
+            ))
+            mail_admin(user_data.user.email(), msg)
             # And skip user mail.
             continue
 
