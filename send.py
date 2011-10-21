@@ -70,7 +70,8 @@ class Despatcher(webapp.RequestHandler):
                   retmax = RETMAX,
                   email = user_data.user.email()
             )
-            # Get the parsed abstracts with a body.
+            # Get the parsed abstracts with an abstract text.
+            Abstr_list = [abstr for a in Abstr_list if abstr.text]
 
             # Write the scores in place.
             update_score(
