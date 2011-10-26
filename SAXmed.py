@@ -58,6 +58,13 @@ class eFetchResultHandler(handler.ContentHandler):
       def __lt__(self, other):
          return self.score < other.score
 
+      def __getattr__(self, attr):
+         if attr == 'text':
+            self.text = ''
+            return ''
+         else:
+            raise AttributeError
+
    ROOT = ('PubmedArticleSet', 'PubmedArticle', 'MedlineCitation')
    ARTICLE = ROOT + ('Article',)
    JOURNAL = ARTICLE + ('Journal',)
