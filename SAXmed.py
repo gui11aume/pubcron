@@ -92,8 +92,7 @@ class eFetchResultHandler(handler.ContentHandler):
       field = self.FIELDS.get(tuple(self._stack))
       # Update the given field by list-append.
       if field:
-         self._dict[field] = self._dict.get(field, []) + \
-               [escape(content)]
+         self._dict[field] = self._dict.get(field, []) + [content]
 
    def clear(self):
       """Erase the dictionary."""
