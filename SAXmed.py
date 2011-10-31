@@ -10,34 +10,42 @@ class eSearchResultHandler(handler.ContentHandler):
    # Fields of interest.
    FIELDS = {
       ROOT + ('Count',): 'count',
-      ROOT + ('QueryKey',): 'querykey',
-      ROOT + ('WebEnv',): 'webenv'
+      ROOT + ('QueryKey',): 'query_key',
+      ROOT + ('WebEnv',): 'WebEnv'
    }
 
    def __init__(self, termdict):
       self._stack = []
       self._errors = False
+      self.data = ''
       # 'termdict' passed by reference.
       self.termdict = termdict
 
    def startElement(self, name, attrs):
+      self.data = ''
       self._stack.append(name)
       if name == 'ErrorList':
          self._errors = True
          self.termdict['errors'] = []
 
    def endElement(self, name):
-      self._stack.pop()
       if name == 'ErrorList': self._errors = False
 
-   def characters(self, content):
       field = self.FIELDS.get(tuple(self._stack))
       # Update the given field by list-append.
       if field:
-         self.termdict[field] = content
+         self.termdict[field] = self.data
       if self._errors:
          # Within the "ErrorList" node.
-         self.termdict['errors'].append((self._stack[-1:], content))
+         self.termdict['errors'].append(
+               (self._stack[-1:], self.data.strip())
+         )
+
+      self._stack.pop()
+      self.data = ''
+
+   def characters(self, data):
+      self.data += data
 
 
 class eFetchResultHandler(handler.ContentHandler):
@@ -49,6 +57,13 @@ class eFetchResultHandler(handler.ContentHandler):
 
       def __lt__(self, other):
          return self.score < other.score
+
+      def __getattr__(self, attr):
+         if attr == 'text':
+            self.text = ''
+            return ''
+         else:
+            raise AttributeError
 
    ROOT = ('PubmedArticleSet', 'PubmedArticle', 'MedlineCitation')
    ARTICLE = ROOT + ('Article',)
@@ -77,22 +92,30 @@ class eFetchResultHandler(handler.ContentHandler):
       handler.ContentHandler.__init__(self)
       self._dict = {}
       self._stack = []
+      self.data = ''
       # 'abstr_list' passed by reference.
       self.abstr_list = abstr_list
 
    def startElement(self, name, attrs):
+      self.data = ''
       self._stack.append(name)
       if name == 'PubmedArticle': self.clear()
 
    def endElement(self, name):
-      self._stack.pop()
+
       if name == 'PubmedArticle': self.wrap()
 
-   def characters(self, content):
       field = self.FIELDS.get(tuple(self._stack))
       # Update the given field by list-append.
       if field:
-         self._dict[field] = self._dict.get(field, []) + [content]
+         self._dict[field] = self._dict.get(field, []) + \
+               [self.data.strip()]
+
+      self._stack.pop()
+      self.data = ''
+
+   def characters(self, data):
+      self.data += data
 
    def clear(self):
       """Erase the dictionary."""
