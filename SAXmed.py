@@ -58,6 +58,13 @@ class eFetchResultHandler(handler.ContentHandler):
       def __lt__(self, other):
          return self.score < other.score
 
+      def __getattr__(self, attr):
+         if attr == 'text':
+            self.text = ''
+            return ''
+         else:
+            raise AttributeError
+
    ROOT = ('PubmedArticleSet', 'PubmedArticle', 'MedlineCitation')
    ARTICLE = ROOT + ('Article',)
    JOURNAL = ARTICLE + ('Journal',)
@@ -102,7 +109,7 @@ class eFetchResultHandler(handler.ContentHandler):
       # Update the given field by list-append.
       if field:
          self._dict[field] = self._dict.get(field, []) + \
-               [escape(self.data.strip())]
+               [self.data.strip()]
 
       self._stack.pop()
       self.data = ''
