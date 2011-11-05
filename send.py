@@ -66,12 +66,12 @@ class Despatcher(webapp.RequestHandler):
          try:
             Abstr_list = eUtils.fetch_Abstr(
                   term = term,
-                  # Limit on all queries to keep it light.
+                  # Limit on all queries, to keep it light.
                   retmax = RETMAX,
-                  email = user_data.user.email()
+                  email = 'pubcron.mailer@gmail.com'
             )
             # Get the parsed abstracts with an abstract text.
-            Abstr_list = [abstr for abstr in Abstr_list if abstr.text]
+            Abstr_list = [a for a in Abstr_list if hasattr(a, 'text')]
 
             # Write the scores in place.
             update_score(

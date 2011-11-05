@@ -38,6 +38,7 @@ class PubMedException(eSearchException):
 def fetch_Abstr(term, **kwargs):
    """Query PubMed and return a list of Abstr instances."""
 
+   # Note: The memory usage is about 1 Mb per 100 PubMed abstracts.
    Abstr_list = []
    parser = make_parser()
    parser.setContentHandler(eFetchResultHandler(Abstr_list))

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from collections import defaultdict
 from xml.sax import handler
 from xml.sax.saxutils import escape
 
@@ -58,12 +59,6 @@ class eFetchResultHandler(handler.ContentHandler):
       def __lt__(self, other):
          return self.score < other.score
 
-      def __getattr__(self, attr):
-         if attr == 'text':
-            self.text = ''
-            return ''
-         else:
-            raise AttributeError
 
    ROOT = ('PubmedArticleSet', 'PubmedArticle', 'MedlineCitation')
    ARTICLE = ROOT + ('Article',)
@@ -90,7 +85,8 @@ class eFetchResultHandler(handler.ContentHandler):
 
    def __init__(self, abstr_list):
       handler.ContentHandler.__init__(self)
-      self._dict = {}
+      # 'defaultdict' is quite handy here (see later).
+      self._dict = defaultdict(list)
       self._stack = []
       self.data = ''
       # 'abstr_list' passed by reference.
@@ -99,17 +95,17 @@ class eFetchResultHandler(handler.ContentHandler):
    def startElement(self, name, attrs):
       self.data = ''
       self._stack.append(name)
-      if name == 'PubmedArticle': self.clear()
+      if name == 'PubmedArticle': self._dict.clear()
 
    def endElement(self, name):
 
       if name == 'PubmedArticle': self.wrap()
 
       field = self.FIELDS.get(tuple(self._stack))
-      # Update the given field by list-append.
+      # Update the given field by list-extension
+      # NB: it works because '_dict' is a  'defaultdict'.
       if field:
-         self._dict[field] = self._dict.get(field, []) + \
-               [self.data.strip()]
+         self._dict[field].extend([self.data.strip()])
 
       self._stack.pop()
       self.data = ''
@@ -117,9 +113,6 @@ class eFetchResultHandler(handler.ContentHandler):
    def characters(self, data):
       self.data += data
 
-   def clear(self):
-      """Erase the dictionary."""
-      self._dict.clear()
 
    def wrap(self):
       """Wrap an instance  of Abstr with few attributes."""

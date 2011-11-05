@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 
-# The following code is largely inspired, or I should say pirated
-# from the nltk module, (which I do not import because I use only
-# a tiny fraction of it.
+# The following code is inspired from the nltk module (which
+# I do not import because I use only a tiny fraction of it).
 
 import re
 from math import log
 from porter import PorterStemmer
+from collections import defaultdict
 
-class Corpus():
-   """Collection of texts, stemmed by by the Porter stemmer.
-   Provides tf-idf calculation."""
+class Index():
+   """Collection of term/occurrence dictionaries, where terms
+   are lower-cased and stemmed by by the Porter stemmer.Also
+   Provides fast tf-idf calculation."""
 
    ## ----------------------    DATA    ---------------------- ##
-
    stopw = set(('a', 'about', 'again', 'all', 'almost', 'also',
       'although', 'alway', 'among', 'an', 'and', 'anoth', 'ani',
       'are', 'as', 'at', 'be', 'becaus', 'been', 'befor', 'between',
@@ -35,7 +35,8 @@ class Corpus():
 
    def __init__(self, texts):
       """Initialize with an iterable of texts."""
-      # Tokenize the texts.
+      # NB: The memory usage is about 2 Mb per 100 PubMed abstracts.
+      # Lower-case and tokenize the texts.
       texts = [
             re.sub('[-)(!?}{:;,\.\[\]]', ' ', txt).lower().split() \
             for txt in texts
@@ -47,21 +48,43 @@ class Corpus():
             for txt in texts \
       ]
       # Remove the stop-words.
-      self.texts = [ \
+      texts = [ \
             [w for w in txt if not w in self.stopw] \
             for txt in texts
       ]
+      # Build the list of 'defaultdicts'.
+      self.dicts = []
+      for txt in texts:
+         cnt = defaultdict(int)
+         for word in txt:
+            cnt[word] +=1
+            cnt['TOTAL'] += 1
+         self.dicts.append(cnt)
 
-   def tf(self, term, index = 0):
-      txt = self.texts[index]
-      return float(txt.count(self.stem(term))) / len(txt)
+
+   def tf(self, term, index):
+      """Return the term frequency in the document of given
+      index. Note that stopwords are excluded from the score."""
+
+      return float(self.dicts[index].get(term, 0)) \
+            / self.dicts[index]['TOTAL']
+
 
    def idf(self, term):
-      nmatch = sum([1 for txt in self.texts if self.stem(term) in txt])
-      # Will fail with ZeroDivisionError if no match.
-      return log(len(self.texts) / float(nmatch))
+      """Return the inverse document frequency of the term."""
 
-   def tfidf(self, term, index = 0):
+      nmatch = sum([1 for dct in self.dicts if term in dct])
+      # Will fail with ZeroDivisionError if no match.
+      return log(len(self.dicts) / float(nmatch))
+
+
+   def tfidf(self, term, index, stemnew=True):
+      """Return the tf-idf score of the term in the document
+      of given index."""
+
+      # Set stemnew to False if term is taken from the 'Index'.
+      if stemnew: term = self.stem(term.lower())
+
       try:
          return self.tf(term, index) * self.idf(term)
       except ZeroDivisionError:
