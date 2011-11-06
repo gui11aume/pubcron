@@ -4,16 +4,15 @@
 # I do not import because I use only a tiny fraction of it).
 
 import re
-from math import log
+from math import log, sqrt
 from porter import PorterStemmer
 from collections import defaultdict
 
-class Index():
-   """Collection of term/occurrence dictionaries, where terms
-   are lower-cased and stemmed by by the Porter stemmer.Also
-   Provides fast tf-idf calculation."""
+class CorpusIndex():
+   """Collection of term/tfidf dictionaries, where terms
+   are lower-cased and stemmed by by the Porter stemmer."""
 
-   ## ----------------------    DATA    ---------------------- ##
+   ## -----------------------    DATA    ------------------------ ##
    stopw = set(('a', 'about', 'again', 'all', 'almost', 'also',
       'although', 'alway', 'among', 'an', 'and', 'anoth', 'ani',
       'are', 'as', 'at', 'be', 'becaus', 'been', 'befor', 'between',
@@ -33,60 +32,76 @@ class Index():
       'which', 'while', 'with', 'within', 'without', 'would'))
 
 
-   def __init__(self, texts):
-      """Initialize with an iterable of texts."""
-      # NB: The memory usage is about 2 Mb per 100 PubMed abstracts.
-      # Lower-case and tokenize the texts.
-      texts = [
-            re.sub('[-)(!?}{:;,\.\[\]]', ' ', txt).lower().split() \
-            for txt in texts
-      ]
-      # Stem the tokens (and get a stemmer attribute en passant).
+   def __init__(self, texts, aux=[]):
+      """Initialize with an iterable of texts. The parameter
+      'aux' is a part of the corpus that is used only for
+      computing idf."""
+
+      # Get a free Porter stemmer for EVERY initialization!
       self.stem = PorterStemmer().stem
-      texts = [ \
-            [self.stem(w) for w in txt] \
-            for txt in texts \
-      ]
-      # Remove the stop-words.
-      texts = [ \
-            [w for w in txt if not w in self.stopw] \
-            for txt in texts
-      ]
-      # Build the list of 'defaultdicts'.
-      self.dicts = []
+      texts = [self.preprocess(txt, self.stem) for txt in texts]
+      aux = [self.preprocess(ax, self.stem) for ax in aux]
+
+      # Compute term and document frequencies.
+      docf = defaultdict(int)
+      termf_dicts = []
       for txt in texts:
-         cnt = defaultdict(int)
+         # Count words in text.
+         wcounts = defaultdict(int)
+         total = 0.0
          for word in txt:
-            cnt[word] +=1
-            cnt['TOTAL'] += 1
-         self.dicts.append(cnt)
+            wcounts[word] += 1
+            total += 1.0
+         # Compute term frequencies, update doc frequencies.
+         tf = {}
+         for word in wcounts:
+            tf[word] = wcounts[word] / total
+            docf[word] += 1
+         # Store term frequencies in 'termf_dicts'.
+         termf_dicts.append(tf)
+
+      # Add the terms in auxiliary corpus to doc frequencies.
+      for txt in aux:
+         for w in set(txt): docf[word] += 1
+
+      # Last loop to compute tf-idf scores.
+      corpus_size = len(texts) + len(aux)
+      self.tfidf = []
+      for tf in termf_dicts:
+         thistfidf = {}
+         for w in tf:
+            thistfidf[w] = tf[w] * log(corpus_size / float(docf[w]))
+         self.tfidf.append(thistfidf)
+
+   def preprocess(self, txt, stem):
+      # NB: The memory usage is about 2 Mb per 100 PubMed abstracts.
+      # Lower-case and tokenize the texts, also remove numbers.
+      txt = re.sub(
+         # 2. Remove numbers.
+            ' [0-9]+ ',
+            ' ',
+         re.sub(
+         # 1. Replace split chars.
+            '[-)(!?}{:;,\.\[\]]',
+            ' ',
+            txt
+         # 3. Split on spaces.
+         )).lower().split()
+      # Stem the tokens and remove stop words.
+      return (w for w in (stem(w) for w in txt) if not w in self.stopw)
 
 
-   def tf(self, term, index):
-      """Return the term frequency in the document of given
-      index. Note that stopwords are excluded from the score."""
+   def cosine(self, index_a, index_b):
+      """Compute the cosine similarity between two documents."""
+      tfidf_a = self.tfidf[index_a]
+      tfidf_b = self.tfidf[index_b]
+      numerator = sum([
+            tfidf_a[w] * tfidf_b[w] \
+            for w in set(tfidf_a).intersection(tfidf_b)
+         ])
+      denominator = sqrt(
+            sum([v**2 for v in tfidf_a.values()]) * \
+            sum([v**2 for v in tfidf_b.values()])
+         )
 
-      return float(self.dicts[index].get(term, 0)) \
-            / self.dicts[index]['TOTAL']
-
-
-   def idf(self, term):
-      """Return the inverse document frequency of the term."""
-
-      nmatch = sum([1 for dct in self.dicts if term in dct])
-      # Will fail with ZeroDivisionError if no match.
-      return log(len(self.dicts) / float(nmatch))
-
-
-   def tfidf(self, term, index, stemnew=True):
-      """Return the tf-idf score of the term in the document
-      of given index."""
-
-      # Set stemnew to False if term is taken from the 'Index'.
-      if stemnew: term = self.stem(term.lower())
-
-      try:
-         return self.tf(term, index) * self.idf(term)
-      except ZeroDivisionError:
-         # 'term' is not present in the corpus.
-         return 0.0
+      return numerator / denominator

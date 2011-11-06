@@ -13,6 +13,7 @@ from google.appengine.ext import db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
+
 class UserData(db.Model):
    """Store user term query and date lat run."""
    user = db.UserProperty()
@@ -21,8 +22,6 @@ class UserData(db.Model):
    last_run = db.DateTimeProperty()
    relevant_ids = db.TextProperty()
    irrelevant_ids = db.TextProperty()
-   positive_terms = db.TextProperty()
-   negative_terms = db.TextProperty()
 
 def term_key():
    """Construct a datastore key for a Term entity."""
@@ -51,7 +50,7 @@ def validate_term(term):
 
 def validate_pmid(idlist):
    """List of PMIDs consist of 8 digits separated by ':'."""
-   if not re.match('([0-9]{8}:)*$', idlist):
+   if not re.match('^(,[0-9]{8})*$', idlist):
       raise DataException
 
 
@@ -71,10 +70,8 @@ class MainPage(webapp.RequestHandler):
             # First user visit: create user data.
             user_data = UserData(term_key())
             user_data.user = user
-            user_data.relevant_ids = db.Text(u':')
-            user_data.irrelevant_ids = db.Text(u':')
-            user_data.positive_terms = db.Text(u':')
-            user_data.negative_terms = db.Text(u':')
+            user_data.relevant_ids = db.Text(u'')
+            user_data.irrelevant_ids = db.Text(u'')
             user_data.put()
 
          template_values = {
@@ -119,7 +116,7 @@ class UpdateTerm(webapp.RequestHandler):
             pass
          except Exception:
             # Something else happened.
-            #TODO: issue a warning.
+            # TODO: issue a warning.
             pass
 
          user_data.term_valid = success
@@ -137,7 +134,7 @@ class MailUpdate(webapp.RequestHandler):
       try:
          user_data = data[0]
       except IndexError:
-         # Hacked: to send the form, Gmail must be open
+         # Hacked!! To send the form, Gmail must be open
          # and the user logged in.
          return
 
@@ -146,52 +143,38 @@ class MailUpdate(webapp.RequestHandler):
          # to another user.
          return
 
-      prev = user_data.relevant_ids + \
+      prev = user_data.relevant_ids + ',' + \
             user_data.irrelevant_ids
       relevant_ids = ''
       irrelevant_ids = ''
-      positive_terms = ''
-      negative_terms = ''
 
-      # Process the key/value terms. The keys consist of
-      # pmid:title, they are split before processing.
+      # Process key/value pairs.
       for name in self.request.arguments():
-         if not self.request.get(name) in ('Yes', 'No'):
-            # Not a Yes/No answer (e.g. user, or NA): skip.
-            continue
-         (pmid, terms) = name.split(':', 1)
-         if pmid in prev + relevant_ids + irrelevant_ids:
+         if name in prev + relevant_ids + irrelevant_ids:
             # Abstract already marked: skip.
             continue
+         # NB: other cases are either no answer, or non
+         # pmid post (like user id).
          if self.request.get(name) == 'Yes':
-            relevant_ids += pmid +  ':'
-            positive_terms += terms + ':'
+            relevant_ids += ',' + name
          elif self.request.get(name) == 'No':
-            irrelevant_ids += pmid + ':'
-            negative_terms += terms + ':'
+            irrelevant_ids += ',' + name
 
       try:
          validate_pmid(relevant_ids + irrelevant_ids)
       except DataException:
-         # Hacked: pmids have changed before POST.
+         # Hacked!! pmids have changed before POST.
          return
 
 
-      # Update the positive and negative words...
-      user_data.positive_terms = db.Text(
-            user_data.positive_terms + positive_terms
-         )
-      user_data.negative_terms = db.Text(
-            user_data.negative_terms + negative_terms
-         )
-      # ... the list of marked abstracts...
+      # Update the list of marked abstracts...
       user_data.relevant_ids = db.Text(
-            user_data.relevant_ids + relevant_ids
-         )
+           re.sub('^,', '', user_data.relevant_ids + relevant_ids)
+      )
       user_data.irrelevant_ids = db.Text(
-            user_data.irrelevant_ids + irrelevant_ids
-         )
-      # ... and push.
+           re.sub('^,', '', user_data.irrelevant_ids + irrelevant_ids)
+      )
+      # ... and put.
       user_data.put()
 
       template_values = {
@@ -200,11 +183,10 @@ class MailUpdate(webapp.RequestHandler):
 
       path = os.path.join(os.path.dirname(__file__),
             'update.html')
+
       self.response.out.write(
             template.render(path, template_values))
 
-   def get(self):
-      self.redirect('/')
 
 application = webapp.WSGIApplication([
   ('/', MainPage),

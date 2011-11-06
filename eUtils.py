@@ -35,6 +35,7 @@ class PubMedException(eSearchException):
 ######           Functions          ######
 ##########################################
 
+
 def fetch_Abstr(term, **kwargs):
    """Query PubMed and return a list of Abstr instances."""
 
@@ -43,6 +44,24 @@ def fetch_Abstr(term, **kwargs):
    parser = make_parser()
    parser.setContentHandler(eFetchResultHandler(Abstr_list))
    parser.parse(fetch_XML(term, **kwargs))
+   return Abstr_list
+
+
+def fetch_ids(id_list, **kwargs):
+   """Query PubMed with a list of ids and return a list of
+   Abstr instances."""
+
+   # Query 50 ids at a time (otherwise the URL is too long).
+   n = len(id_list)
+   id_chunks = [
+       ','.join(id_list[i*50:(i+1)*50-1]) for i in range(1+(n-1)/50)
+   ]
+
+   Abstr_list = []
+   parser = make_parser()
+   parser.setContentHandler(eFetchResultHandler(Abstr_list))
+   for id_chunk in id_chunks:
+      parser.parse(eFetch_query(id=id_chunk))
    return Abstr_list
 
 
@@ -58,15 +77,13 @@ def fetch_XML(term, **kwargs):
    return eFetch_query(**eFetch_params)
 
 
-def eFetch_query(query_key, WebEnv, **kwargs):
+def eFetch_query(**kwargs):
    """Basic eFetch query through QueryKey and WebEnv.
    Return an XML stream."""
 
    extrargs = ''.join(['&%s=%s' % it for it in kwargs.items()])
 
    return urllib2.urlopen(BASE + "efetch.fcgi?db=pubmed" \
-         + "&query_key=" + query_key \
-         + "&WebEnv=" + WebEnv \
          + extrargs \
          + "&retmode=xml")
 

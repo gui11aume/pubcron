@@ -5,7 +5,8 @@ from xml.sax import handler
 from xml.sax.saxutils import escape
 
 class eSearchResultHandler(handler.ContentHandler):
-   """Parse PubMed eSearch XML results."""
+   """Parse PubMed eSearch XML results. Update a dictionary
+   in place that has to be provided upon initialization."""
 
    ROOT = ('eSearchResult',)
    # Fields of interest.
@@ -50,7 +51,11 @@ class eSearchResultHandler(handler.ContentHandler):
 
 
 class eFetchResultHandler(handler.ContentHandler):
-   """Parse PubMed eFetch XML results."""
+   """Parse PubMed eFetch XML results. Update a list in place
+   that has to be provided upon initialization.
+
+   NB: By default, abstracts without a text are not returned.
+   Initialize the instance with 'return_empty=True' to get them."""
 
    class Abstr:
       """Only a namespace for this module. But Abstr isntances
@@ -83,14 +88,20 @@ class eFetchResultHandler(handler.ContentHandler):
 #     ROOT + ('MeshHeadingList', 'MeshHeading', 'DescriptorName'): 'mesh'
    }
 
-   def __init__(self, abstr_list):
+   def __init__(self, Abstr_list, return_empty=False):
+      """Initialize a 'defaultdict' of collected terms, and
+      _stack/data variables used for data collection."""
+
+      # Call the super constructor.
       handler.ContentHandler.__init__(self)
-      # 'defaultdict' is quite handy here (see later).
+
+      self.return_empty = return_empty
+      # 'defaultdict' is quite handy here (see below).
       self._dict = defaultdict(list)
       self._stack = []
       self.data = ''
-      # 'abstr_list' passed by reference.
-      self.abstr_list = abstr_list
+      # 'Abstr_list' passed by reference.
+      self.Abstr_list = Abstr_list
 
    def startElement(self, name, attrs):
       self.data = ''
@@ -116,23 +127,27 @@ class eFetchResultHandler(handler.ContentHandler):
 
    def wrap(self):
       """Wrap an instance  of Abstr with few attributes."""
-      # Define attributes 'journal', 'pubdate', 'title', 'authors'
-      # 'pmid' and 'text'.
-      try:
-         abstr = self.Abstr()
-         abstr.journal = ''.join(self._dict['jrnl'])
-         abstr.pubdate = ' '.join(
-               self._dict.get('month', []) + \
-               self._dict.get('day', [])   + \
-               self._dict.get('year', [])
-         )
-         abstr.title = ''.join(self._dict['title'])
-         abstr.authors = ', '.join([' '.join(a) \
-               for a in zip(self._dict['intls'], self._dict['name'])])
-         abstr.pmid = self._dict['pmid'][0]
-         abstr.text = ''.join(self._dict['text'])
-      # If an abstract misses any of those attributes, skip it.
-      except KeyError:
-         pass
 
-      self.abstr_list.append(abstr)
+      # Abstracts without a text are discarded by default.
+      if not self.return_empty and not self._dict.has_key('text'):
+         return
+
+      # Define attributes 'pmid', 'journal', 'pubdate', 'title',
+      # 'authors' and 'text'.
+      abstr = self.Abstr()
+
+      # NB: '_dict' is a default dict, so by the use of 'join()'
+      # the attributes are always defined, but possibly empty.
+      abstr.pmid = ':'.join(self._dict['pmid'])
+      abstr.journal = ''.join(self._dict['jrnl'])
+      abstr.pubdate = ' '.join(
+         self._dict['month'] + self._dict['day'] + self._dict['year']
+      )
+      abstr.title = ''.join(self._dict['title'])
+      abstr.authors = ', '.join([
+            ' '.join(a) \
+            for a in zip(self._dict['intls'], self._dict['name'])
+      ])
+      abstr.text = ''.join(self._dict['text'])
+
+      self.Abstr_list.append(abstr)

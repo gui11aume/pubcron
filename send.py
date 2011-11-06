@@ -6,9 +6,9 @@ import datetime
 import traceback
 
 import eUtils
+import Classify
 
 from pubcron import UserData, term_key
-from Classify import update_score
 
 from google.appengine.api import users
 from google.appengine.ext import webapp
@@ -17,15 +17,19 @@ from google.appengine.api import mail
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-############
-RETMAX = 100
+# ------------------------------------------------------------------------
+RETMAX = 200
+admail = 'pubcron.mailer@gmail.com'
+# ------------------------------------------------------------------------
 
 
 def mail_admin(useremail, msg):
-   mail.send_mail("pubcron.mailer@gmail.com",
-                  "pubcron.mailer@gmail.com",
-                  "Pubcron mail report",
-                  "%s:\n%s" % (useremail, msg))
+   mail.send_mail(
+         admail,
+         admail,
+         "Pubcron mail report",
+         "%s:\n%s" % (useremail, msg)
+   )
 
 class Despatcher(webapp.RequestHandler):
    """Called by the cron scheduler. Query PubMed with all the
@@ -54,37 +58,74 @@ class Despatcher(webapp.RequestHandler):
             continue
 
          yesterday = datetime.datetime.today() + \
-               datetime.timedelta(days=-1)
+               datetime.timedelta(days = -1)
+         day_before = yesterday+ datetime.timedelta(days = -1)
+         one_year_ago = datetime.datetime.today() + \
+               datetime.timedelta(days = -365)
+
          date_from = last_run or yesterday
          date_to = max(yesterday, date_from)
 
-         term = "("+term+")" + \
+         term_recent = "("+term+")" + \
                date_from.strftime("+AND+(%Y%%2F%m%%2F%d:") + \
                date_to.strftime("%Y%%2F%m%%2F%d[crdt])")
+
+         term_older = "("+term+")" + \
+               one_year_ago.strftime("+AND+(%Y%%2F%m%%2F%d:") + \
+               day_before.strftime("%Y%%2F%m%%2F%d[crdt])")
 
          # Fetch the abstracts.
          try:
             Abstr_list = eUtils.fetch_Abstr(
-                  term = term,
+                  term = term_recent,
                   # Limit on all queries, to keep it light.
                   retmax = RETMAX,
-                  email = 'pubcron.mailer@gmail.com'
+                  email = admail
             )
-            # Get the parsed abstracts with an abstract text.
-            Abstr_list = [a for a in Abstr_list if hasattr(a, 'text')]
 
-            # Write the scores in place.
-            update_score(
-                  Abstr_list,
-                  len(user_data.relevant_ids.split(':')),
-                  len(user_data.irrelevant_ids.split(':')),
-                  user_data.positive_terms.split(':'),
-                  user_data.negative_terms.split(':')
+            # Ensure user gave feedback before computing scores.
+            if user_data.relevant_ids and user_data.irrelevant_ids:
+
+               # Recall relevant and irrelevant abstracts.
+               Abstr_relevant = eUtils.fetch_ids(
+                     user_data.relevant_ids.split(','),
+                     retmax = RETMAX,
+                     email = admail
                )
+               Abstr_irrelevant = eUtils.fetch_ids(
+                     user_data.irrelevant_ids.split(','),
+                     retmax = RETMAX,
+                     email = admail
+               )
+
+               # Get a pseudo random micro-corpus of older hits with
+               # same term (to avoid hit duplication), for tf-idf.
+               # This is useful when little feedback is available,
+               # or when the query changed.
+               micro_corpus = eUtils.fetch_Abstr(
+                     term = term_older,
+                     retmax = RETMAX,
+                     email = admail
+               )
+
+               # Write the scores in place.
+               Classify.update_score_inplace(
+                     Abstr_list,
+                     Abstr_relevant,
+                     Abstr_irrelevant,
+                     micro_corpus
+               )
+
+            else:
+               # No relevance feedback.
+               for abstr in Abstr_list:
+                  abstr.score = 0.0
+
             template_values = {
                'user': user_data.user.nickname(),
                'Abstr_list': sorted(Abstr_list, reverse=True)
             }
+
          except eUtils.NoHitException:
             # No hit today. Better luck tomorrow :-)
             continue
