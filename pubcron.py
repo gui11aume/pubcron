@@ -122,7 +122,7 @@ class UpdateTerm(webapp.RequestHandler):
          user_data.term_valid = success
          user_data.put()
 
-      self.redirect('/')
+      self.redirect('/query.html')
 
 
 class MailUpdate(webapp.RequestHandler):
@@ -190,7 +190,7 @@ class MailUpdate(webapp.RequestHandler):
 
 
 application = webapp.WSGIApplication([
-  ('/query.html?', MainPage),
+  ('/query.html', MainPage),
   ('/update', UpdateTerm),
   ('/mailupdate', MailUpdate),
 ], debug=True)
