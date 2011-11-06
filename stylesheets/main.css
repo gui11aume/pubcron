@@ -13,19 +13,25 @@ h2 {
   margin-bottom:2em;
 }
 #band {
-  height:15px;
+  height:24px;
 }
 #linea {
-  height:5px;
+  height:8px;
   background-color:#006633; // dark green
 }
 #lineb {
-  height:5px;
+  height:8px;
   background-color:#009933; // green
 }
 #linec {
-  height:5px;
+  height:8px;
   background-color:#99CC99; //pale green
+}
+#links {
+  position:absolute;
+  top:10px;
+  left:30%;
+  text-align:center;
 }
 #spacer{
   height:10px;
@@ -37,7 +43,7 @@ h2 {
   position:absolute;
   left:20%;
   top:40px;
-  width:495px;
+  width:516px;
 }
 #submit_area {
   margin-top:2em;

@@ -11,9 +11,12 @@ handlers:
   script: send.py
   login: admin
 
-- url: /.*
+- url: /(update|mailupdate|query.html?)
   script: pubcron.py
   login: required
+
+- url: /.*
+  script: nologin.py
 
 builtins:
 - remote_api: on

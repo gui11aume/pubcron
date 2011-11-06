@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>PubCron ({{ user_data.user.nickname }})</title>
+    <title>Welcome to PubCron</title>
     <link type="text/css" rel="stylesheet" href="stylesheets/main.css" />
   </head>
   <body>
@@ -9,44 +9,24 @@
       <div id="lineb"></div>
       <div id="linec"></div>
     </div>
+    <div id="links">
+        <a href="query.html">My query</a>
+        <spacer type="block" width="40"></spacer>
+        <a href="help.html">Help</a>
+    </div>
     <div id="spacer"></div>
     <div id="main_container">
       <div id="body">
       <h1>PubCron</h1>
-      <h2>Evolutive PubMed feeds</h2>
-    <div id="user_info">
-    {% if user_data.term %}
-      Your PubMed query term is:
-      <p class="breakword">
-        {{ user_data.term }}
-      </p>
-      {% if user_data.term_valid %}
-      <span class="valid">(valid)</span>
-      {% else %}
-      <span class="invalid">(not valid)</span>
-      {% endif %}
-    {% endif %}
-    
-    </div>
+      <h2>Personal PubMed feeds</h2>
 
-    <div id="submit_area">
-      Enter the query term to be submitted to <a href="http://www.ncbi.nlm.nih.gov/pubmed">PubMed</a>.<br />
+      <p>PubCron is a personal watch on articles referenced
+      by <a href="http://www.ncbi.nlm.nih.gov/pubmed/">PubMed</a>. With
+      <b>over 2,000 daily releases on PubMed</b>, PubCron helps you follow
+      the information that you find interesting.</b></p>
 
-    <form action="/update" method="post">
-      <input type="text" name="term" size="58"><br />
-      <input type="submit" value="Submit">
-    </form>
-    <span style="font-size:80%; font-weight:bold;">Examples:</span>
-    <p class="breakword">nature[journal]+OR+science[journal]</p>
-    <p class="breakword">(nature[journal]+OR+nature+biotechnology[journal]+OR+science[journal]+OR+cell[journal]+OR+chromatin[all])+AND+english[language]+AND+journal+article[ptyp]</p>
 
-    </div>
-
-    <div id="footer">
-      The query results will be sent to <br />
-    <span class="login">{{ user_email }}</span>.
-    </div>
-    </div> <!-- end body -->
+      </div> <!-- end body -->
     </div> <!-- end main_container -->
 
   </body>

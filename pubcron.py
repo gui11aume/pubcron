@@ -80,7 +80,7 @@ class MainPage(webapp.RequestHandler):
          }
 
          path = os.path.join(os.path.dirname(__file__),
-               'index.html')
+               'query.html')
          self.response.out.write(
                template.render(path, template_values))
 
@@ -182,14 +182,15 @@ class MailUpdate(webapp.RequestHandler):
       }
 
       path = os.path.join(os.path.dirname(__file__),
-            'update.html')
+            'feedback.html')
 
       self.response.out.write(
             template.render(path, template_values))
 
 
+
 application = webapp.WSGIApplication([
-  ('/', MainPage),
+  ('/query.html?', MainPage),
   ('/update', UpdateTerm),
   ('/mailupdate', MailUpdate),
 ], debug=True)
