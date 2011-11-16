@@ -1,6 +1,15 @@
 <html>
  <body>
   <form name="relevance" action="http://pubcron.appspot.com/mailupdate" method="post">
+    <p>Your <a href="http://pubcron.appspot.com">PubCron</a> query
+    returned <b>{{ nhits }}</b> hits.</p>
+    <p>You can specify wheter an abstract is relevant or not
+    and notify the Pubcron server by pressing the "Send feedback"
+    button (this will trigger a warning). This information will
+    be used to sort future hits by relevance.</p>
+    <input type="submit" value="Send feedback" />
+    <br />
+    <br />
     <input type="hidden" name="user" value="{{ user }}" />
   {% for abstr in Abstr_list %}
     <span class="journal_date" style="font-zie:75%;">
@@ -23,7 +32,10 @@
     <br />
     <br />
   {% endfor %}
-    <input type="submit" value="Send update" />
+    <input type="submit" value="Send feedback" />
+    To unsubscribe, visit
+    <a href="http://pubcron.appspot.com/query">http://pubcron.appspot.com/query"</a>
+    and enter an empty query.
   </form>
  </body>
 </html>
