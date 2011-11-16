@@ -8,12 +8,27 @@ import sys
 import traceback
 
 from google.appengine.api import mail
+from google.appengine.ext import db
 
 # -------------------------------------------------------------------
 admail = 'pubcron.mailer@gmail.com'
 RETMAX = 200 
 MAXHITS = 40
 # -------------------------------------------------------------------
+
+class UserData(db.Model):
+   """Store user term query and date lat run."""
+   user = db.UserProperty()
+   term = db.StringProperty()
+   term_valid = db.BooleanProperty()
+   last_run = db.DateTimeProperty()
+   relevant_ids = db.TextProperty()
+   irrelevant_ids = db.TextProperty()
+
+
+def term_key():
+    """Construct a datastore key for a Term entity."""
+    return db.Key.from_path('Term', '1')
 
 
 def mail_admin(useremail, msg=None):

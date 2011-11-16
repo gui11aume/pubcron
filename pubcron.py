@@ -3,10 +3,9 @@
 import os
 import re
 import cgi
-import sys
-import traceback
 import wsgiref.handlers
 
+from app_admin import UserData, term_key
 import app_admin
 import eUtils
 
@@ -17,18 +16,6 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 
-class UserData(db.Model):
-   """Store user term query and date lat run."""
-   user = db.UserProperty()
-   term = db.StringProperty()
-   term_valid = db.BooleanProperty()
-   last_run = db.DateTimeProperty()
-   relevant_ids = db.TextProperty()
-   irrelevant_ids = db.TextProperty()
-
-def term_key():
-   """Construct a datastore key for a Term entity."""
-   return db.Key.from_path('Term', '1')
 
 class UpdateException(Exception):
    pass

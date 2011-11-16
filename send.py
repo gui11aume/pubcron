@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
 import datetime
-import traceback
 
+
+from app_admin import UserData, term_key
 import app_admin
 import eUtils
 import Classify
 
-from pubcron import UserData, term_key
 
 from google.appengine.api import users
 from google.appengine.ext import webapp
-from google.appengine.ext import db
 from google.appengine.api import mail
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app

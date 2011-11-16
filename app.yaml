@@ -18,6 +18,7 @@ handlers:
 - url: /(update|mailupdate|query.html?)
   script: pubcron.py
   login: required
+  secure: optional
 
 - url: /.*
   script: nologin.py
