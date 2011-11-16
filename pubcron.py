@@ -1,10 +1,13 @@
+# -*- coding: utf-8 -*-
+
 import os
 import re
 import cgi
-import datetime
-import urllib
+import sys
+import traceback
 import wsgiref.handlers
 
+import app_admin
 import eUtils
 
 from google.appengine.api import users
@@ -107,16 +110,19 @@ class UpdateTerm(webapp.RequestHandler):
          success = False
          try:
             validate_term(user_data.term)
-            eUtils.robust_eSearch_query(user_data.term)
+            eUtils.get_hit_count(
+                  term = user_data.term,
+                  email = app_admin.admail
+            )
             success = True
          except (TermException, eUtils.PubMedException,
                eUtils.NoHitException):
             # Term error, PubMed error or no nit: We keep
             # 'success' as False.
             pass
-         except Exception:
-            # Something else happened.
-            # TODO: issue a warning.
+         except Exception, e:
+            # Something else happened: send a mail to admin.
+            app_admin.mail_admin(user_data.user.email())
             pass
 
          user_data.term_valid = success

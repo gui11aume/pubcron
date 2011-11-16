@@ -1,8 +1,11 @@
 <html>
  <body>
-  <form name="relevance" action="http://pubcron.appspot.com/mailupdate" method="post">
+  <form name="relevance" action="https://pubcron.appspot.com/mailupdate" method="post">
     <p>Your <a href="http://pubcron.appspot.com">PubCron</a> query
-    returned <b>{{ nhits }}</b> hits.</p>
+    returned <b>{{ nhits }}</b> hits. {{ maxhit_exceeded }}</p>
+    {% if retmax_exceeded %}
+      <b>{{ retmax_exceeded }}</b><br />
+    {% endif %}
     <p><i>You can specify wheter an abstract is relevant or not
     and notify the Pubcron server by pressing the "Send feedback"
     button (this will trigger a warning). This information will

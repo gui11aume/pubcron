@@ -5,6 +5,7 @@ import sys
 import datetime
 import traceback
 
+import app_admin
 import eUtils
 import Classify
 
@@ -17,19 +18,6 @@ from google.appengine.api import mail
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-# ------------------------------------------------------------------------
-RETMAX = 200
-admail = 'pubcron.mailer@gmail.com'
-# ------------------------------------------------------------------------
-
-
-def mail_admin(useremail, msg):
-   mail.send_mail(
-         admail,
-         admail,
-         "Pubcron mail report",
-         "%s:\n%s" % (useremail, msg)
-   )
 
 class Despatcher(webapp.RequestHandler):
    """Called by the cron scheduler. Query PubMed with all the
@@ -88,8 +76,8 @@ class Despatcher(webapp.RequestHandler):
             Abstr_list = eUtils.fetch_Abstr(
                   term = term_recent,
                   # Limit on all queries, to keep it light.
-                  retmax = RETMAX,
-                  email = admail
+                  retmax = app_admin.RETMAX,
+                  email = app_admin.admail
             )
 
             # Ensure user gave feedback before computing scores.
@@ -98,12 +86,12 @@ class Despatcher(webapp.RequestHandler):
                # Recall relevant and irrelevant abstracts.
                Abstr_relevant = eUtils.fetch_ids(
                      user_data.relevant_ids.split(','),
-                     retmax = RETMAX,
+                     retmax = app_admin.RETMAX,
                      email = admail
                )
                Abstr_irrelevant = eUtils.fetch_ids(
                      user_data.irrelevant_ids.split(','),
-                     retmax = RETMAX,
+                     retmax = app_admin.RETMAX,
                      email = admail
                )
 
@@ -113,11 +101,11 @@ class Despatcher(webapp.RequestHandler):
                # or when the query changed.
                micro_corpus = eUtils.fetch_Abstr(
                      term = term_older,
-                     retmax = RETMAX,
+                     retmax = app_admin.RETMAX,
                      email = admail
                )
 
-               # Write the scores in place.
+               # Write the scores in place and sort.
                Classify.update_score_inplace(
                      Abstr_list,
                      Abstr_relevant,
@@ -125,15 +113,44 @@ class Despatcher(webapp.RequestHandler):
                      micro_corpus
                )
 
+               Abstr_list = sorted(Abstr_list, reverse=True)
+
             else:
                # No relevance feedback.
                for abstr in Abstr_list:
                   abstr.score = 0.0
 
+            # Set a limit on hit number.
+            nhits = len(Abstr_list)
+            if nhits > app_admin.MAXHITS:
+               # Send the top of the sorted list and notify the user.
+               maxhit_exceeded = 'Showing only the top %d.' % \
+                     app_admin.MAXHITS
+               Abstr_list = Abstr_list[:app_admin.MAXHITS]
+               # User's query may also exceed app_admin.RETMAX
+               # (the limit in eSearch results). Let's check that
+               # too while we're at it.
+               todays_hit_count = eUtils.get_hit_count(
+                     term = term_recent,
+                     email = app_admin.admail
+               )
+               if todays_hit_count > app_admin.RETMAX:
+                  retmax_exceeded = \
+                  """Important note: the number of hits returned
+                  by your query exceeded the limit of abstracts that
+                  PubCron requests from PubMed. As a results, some
+                  hits were ignored. Enter a more specific query term
+                  if this message appears regularly."""
+            else:
+               maxhit_exceeded = ''
+               retmax_exceeded = ''
+
             template_values = {
-               'nhits': len(Abstr_list),
+               'nhits': nhits,
+               'maxhit_exceeded': maxhit_exceeded,
+               'retmax_exceeded': retmax_exceeded,
                'user': user_data.user.nickname(),
-               'Abstr_list': sorted(Abstr_list, reverse=True)
+               'Abstr_list': Abstr_list
             }
 
          except eUtils.NoHitException:
@@ -142,12 +159,7 @@ class Despatcher(webapp.RequestHandler):
          except Exception, e:
             # For other exceptions (including PubMedExceptions), send
             # a mail to amdin.
-            msg = ''.join(traceback.format_exception(
-                  sys.exc_type,
-                  sys.exc_value,
-                  sys.exc_traceback
-            ))
-            mail_admin(user_data.user.email(), msg)
+            app_admin.mail_admin(user_data.user.email())
             # And skip user mail.
             continue
 

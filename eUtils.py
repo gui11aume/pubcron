@@ -88,32 +88,44 @@ def eFetch_query(**kwargs):
          + "&retmode=xml")
 
 
-def robust_eSearch_query(term, retmax=float('inf'), **kwargs):
-   """Robust eSearch query is carried out in two steps: the first
-   request returns hit count and meta information (PubMed query
-   translation, errors, warnings etc.) on which error checking
-   is performed. The second request returns results using
-   "usehistory=y", producing QueryKey and WebEnv output fields that
-   can be used for future requests or passed on to eFetch."""
+def get_hit_count(term, **kwargs):
+   """Call eSearch_query and performs error checking.
+   Raise Exceptions if no hit, or PubMed errors, otherwise
+   return hit count."""
 
-   # Initial query to check for errors and get hit count.
-   initial_query = {}
+   # Call 'eSearch_query()' and parse the output.
+   query = {}
    parser = make_parser()
-   parser.setContentHandler(eSearchResultHandler(initial_query))
+   parser.setContentHandler(eSearchResultHandler(query))
    parser.parse(eSearch_query(
          term = term,
          usehistory = False,
-         retmax = 0,
+         retmax = 0, # (do not return any hit).
          **kwargs
       ))
+
    # Check for the presence of "ErrorList".
-   if initial_query.get('errors'):
-      raise PubMedException(initial_query.get('errors'))
+   if query.get('errors'):
+      raise PubMedException(query.get('errors'))
 
    # Check hit count.
-   count = int(initial_query.get('count'))
+   count = int(query.get('count', 0))
    if count == 0:
       raise NoHitException(term)
+   else:
+      return count
+
+
+def robust_eSearch_query(term, retmax=float('inf'), **kwargs):
+   """Robust eSearch query is carried out in two steps: the first
+   request returns hit count. The second request returns results using
+   "usehistory=y", producing QueryKey and WebEnv output fields that
+   can be used for future requests or passed on to eFetch.
+   
+   The call to 'get_hit_count()' will raise Python errors in case the
+   query is invalid or suspicious."""
+
+   count = get_hit_count(term, **kwargs)
 
    return eSearch_query(
          term = term,
