@@ -37,6 +37,9 @@ class Despatcher(webapp.RequestHandler):
 
    def get(self):
 
+      # Debug mode: /send?debug=your.name@example.com
+      debug = self.request.get('debug', False)
+
       # Path to the mail html template.
       path_to_hits = os.path.join(os.path.dirname(__file__),
             'hits.html')
@@ -47,15 +50,21 @@ class Despatcher(webapp.RequestHandler):
       for user_data in data:
 
          term = str(user_data.term)
-
-         # Update last time run.
          last_run = user_data.last_run
-         user_data.last_run = datetime.datetime.now()
-         user_data.put()
+
+         # Update last time run (except when debugging).
+         if not debug:
+            user_data.last_run = datetime.datetime.now()
+            user_data.put()
+
+         # While debugging, skip all users except target.
+         elif user_data.user.email() != debug:
+            continue
 
          # Skip user if term is not valid (or empty incidentally).
          if not user_data.term_valid:
             continue
+
 
          yesterday = datetime.datetime.today() + \
                datetime.timedelta(days = -1)
@@ -122,6 +131,7 @@ class Despatcher(webapp.RequestHandler):
                   abstr.score = 0.0
 
             template_values = {
+               'nhits': len(Abstr_list),
                'user': user_data.user.nickname(),
                'Abstr_list': sorted(Abstr_list, reverse=True)
             }

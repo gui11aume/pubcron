@@ -3,10 +3,10 @@
   <form name="relevance" action="http://pubcron.appspot.com/mailupdate" method="post">
     <p>Your <a href="http://pubcron.appspot.com">PubCron</a> query
     returned <b>{{ nhits }}</b> hits.</p>
-    <p>You can specify wheter an abstract is relevant or not
+    <p><i>You can specify wheter an abstract is relevant or not
     and notify the Pubcron server by pressing the "Send feedback"
     button (this will trigger a warning). This information will
-    be used to sort future hits by relevance.</p>
+    be used to sort future hits by relevance.</i></p>
     <input type="submit" value="Send feedback" />
     <br />
     <br />
@@ -33,9 +33,9 @@
     <br />
   {% endfor %}
     <input type="submit" value="Send feedback" />
-    To unsubscribe, visit
-    <a href="http://pubcron.appspot.com/query">http://pubcron.appspot.com/query"</a>
-    and enter an empty query.
+    <p>To unsubscribe, visit
+    <a href="http://pubcron.appspot.com/query.html">http://pubcron.appspot.com/query.html</a>
+    and enter an empty query.</p>
   </form>
  </body>
 </html>
