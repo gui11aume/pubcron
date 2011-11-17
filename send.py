@@ -85,12 +85,12 @@ class Despatcher(webapp.RequestHandler):
                Abstr_relevant = eUtils.fetch_ids(
                      user_data.relevant_ids.split(','),
                      retmax = app_admin.RETMAX,
-                     email = admail
+                     email = app_admin.admail
                )
                Abstr_irrelevant = eUtils.fetch_ids(
                      user_data.irrelevant_ids.split(','),
                      retmax = app_admin.RETMAX,
-                     email = admail
+                     email = app_admin.admail
                )
 
                # Get a pseudo random micro-corpus of older hits with
@@ -100,7 +100,7 @@ class Despatcher(webapp.RequestHandler):
                micro_corpus = eUtils.fetch_Abstr(
                      term = term_older,
                      retmax = app_admin.RETMAX,
-                     email = admail
+                     email = app_admin.admail
                )
 
                # Write the scores in place and sort.
