@@ -1,7 +1,27 @@
 # -*- coding: utf-8 -*-
 """
-Control panel of the app, containing constants
-and admin stuff.
+Control panel of the app, containing constants and admin stuff.
+
+To edit the datastore with the remote API shell run from the
+Linux command line:
+
+google_appengine/remote_api_shell.py
+
+This starts a Python-like shell where you need to import the
+Google db module and this module because it constains the model
+for the datastore.
+
+from google.appengine.ext import db
+import app_admin
+
+Get the data as follows:
+entries = app_admin.UserData.all().fetch(10) # Or more.
+
+Get the field value as follows:
+entries[0].irrelevant_ids
+
+And save them like that:
+entries[0].put()
 """
 
 import sys
