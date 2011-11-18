@@ -120,8 +120,13 @@ class UpdateTerm(webapp.RequestHandler):
 
 class MailUpdate(webapp.RequestHandler):
    """Handle Gmail form update."""
+
    def post(self):
       user = users.get_current_user()
+      if not user:
+         # Not logged in.
+         self.redirect(users.create_login_url(self.request.uri))
+
       data = UserData.gql('WHERE ANCESTOR IS :1 AND user = :2',
             term_key(), user)
       try:
