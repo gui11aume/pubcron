@@ -132,16 +132,11 @@ class Despatcher(webapp.RequestHandler):
                      term = term_recent,
                      email = app_admin.admail
                )
-               if todays_hit_count > app_admin.RETMAX:
-                  retmax_exceeded = \
-                  """Important note: the number of hits returned
-                  by your query exceeded the limit of abstracts that
-                  PubCron requests from PubMed. As a results, some
-                  hits were ignored. Enter a more specific query term
-                  if this message appears regularly."""
+               retmax_exceeded = True if \
+                  todays_hit_count > app_admin.RETMAX else False
             else:
                maxhit_exceeded = ''
-               retmax_exceeded = ''
+               retmax_exceeded = False
 
             template_values = {
                'nhits': nhits,
