@@ -121,6 +121,13 @@ class UpdateTerm(webapp.RequestHandler):
 class MailUpdate(webapp.RequestHandler):
    """Handle Gmail form update."""
 
+   def get(self):
+      self.response.out.write(open(os.path.join(
+            os.path.dirname(__file__),
+            'problem.html')
+         ).read()
+      )
+
    def post(self):
       user = users.get_current_user()
       if not user:
