@@ -2,9 +2,9 @@
 
 import os
 import datetime
+from hashlib import sha1
 
 
-from app_admin import UserData, term_key
 import app_admin
 import eUtils
 import Classify
@@ -31,7 +31,10 @@ class Despatcher(webapp.RequestHandler):
             'hits.html')
 
       # Get all users data.
-      data = UserData.gql("WHERE ANCESTOR IS :1", term_key())
+      data = app_admin.UserData.gql(
+            "WHERE ANCESTOR IS :1",
+            app_admin.term_key()
+      )
 
       for user_data in data:
 
@@ -118,6 +121,7 @@ class Despatcher(webapp.RequestHandler):
                for abstr in Abstr_list:
                   abstr.score = 0.0
 
+
             # Set a limit on hit number.
             nhits = len(Abstr_list)
             if nhits > app_admin.MAXHITS:
@@ -138,12 +142,19 @@ class Despatcher(webapp.RequestHandler):
                maxhit_exceeded = ''
                retmax_exceeded = False
 
+            # Make a security checksum.
+            # 1. Concatenate the PMIDs.
+            pmids = ''.join(sorted([a.pmid for a in Abstr_list]))
+            # 2. Add the random salt, and compute the SHA1 digest.
+            checksum = sha1(pmids + user_data.salt).hexdigest()
+
             template_values = {
                'nhits': nhits,
                'maxhit_exceeded': maxhit_exceeded,
                'retmax_exceeded': retmax_exceeded,
-               'user': user_data.user.nickname(),
-               'Abstr_list': Abstr_list
+               'uid': user_data.uid,
+               'checksum': checksum,
+               'Abstr_list': Abstr_list,
             }
 
          except eUtils.NoHitException:

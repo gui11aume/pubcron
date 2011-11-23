@@ -4,8 +4,8 @@ import os
 import re
 import cgi
 import wsgiref.handlers
+from hashlib import sha1
 
-from app_admin import UserData, term_key
 import app_admin
 import eUtils
 
@@ -52,17 +52,13 @@ class MainPage(webapp.RequestHandler):
 
       if user:
          # From here the user is logged in as user.
-         data = UserData.gql('WHERE ANCESTOR IS :1 AND user = :2',
-               term_key(), user)
+         data = app_admin.UserData.gql('WHERE ANCESTOR IS :1 AND user = :2',
+               app_admin.term_key(), user)
          try:
             user_data = data[0]
          except IndexError:
             # First user visit: create user data.
-            user_data = UserData(term_key())
-            user_data.user = user
-            user_data.relevant_ids = db.Text(u'')
-            user_data.irrelevant_ids = db.Text(u'')
-            user_data.put()
+            user_data = app_admin.init_data(user)
 
          template_values = {
             'user_data': user_data,
@@ -84,8 +80,10 @@ class UpdateTerm(webapp.RequestHandler):
    def post(self):
       user = users.get_current_user()
       if user:
-         data = UserData.gql('WHERE ANCESTOR IS :1 AND user = :2',
-               term_key(), user)
+         data = app_admin.UserData.gql(
+               'WHERE ANCESTOR IS :1 AND user = :2',
+               app_admin.term_key(), user
+         )
 
          user_data = data[0]
 
@@ -121,6 +119,16 @@ class UpdateTerm(webapp.RequestHandler):
 class MailUpdate(webapp.RequestHandler):
    """Handle Gmail form update."""
 
+   def validate_request(self, user_data):
+      # get PMIDs of abstracts in the mail.
+      pmids = ''.join(sorted([pmid for pmid in self.request.arguments() \
+            if re.match('[0-9]{8}$', pmid)]))
+      # Add a bit of random salt.
+      checksum = sha1(pmids + user_data.salt).hexdigest()
+
+      return checksum
+
+
    def get(self):
       self.response.out.write(open(os.path.join(
             os.path.dirname(__file__),
@@ -128,26 +136,30 @@ class MailUpdate(webapp.RequestHandler):
          ).read()
       )
 
-   def post(self):
-      user = users.get_current_user()
-      if not user:
-         # Not logged in.
-         self.redirect(users.create_login_url(self.request.uri))
 
-      data = UserData.gql('WHERE ANCESTOR IS :1 AND user = :2',
-            term_key(), user)
+   def post(self):
+      # Who is it? Get it from the POST parameters.
+      uid = self.request.get('uid')
+
+      data = app_admin.UserData.gql(
+            'WHERE ANCESTOR IS :1 AND uid = :2',
+            app_admin.term_key(), uid
+      )
       try:
          user_data = data[0]
       except IndexError:
-         # Hacked!! To send the form, Gmail must be open
-         # and the user logged in.
+         # Wrong uid (hacked?!!): good-bye.
+         self.response.out.write(uid)
          return
 
-      if not user.nickname() == self.request.get('user'):
-         # Mistake: user responds to a mail addressed
-         # to another user.
+      # Check that user responds to mail.
+      checksum = self.validate_request(user_data)
+      if not checksum == self.request.get('checksum'):
+         # Invalid post paramters (hacked?!!): good-bye.
+         self.response.out.write('%s\n%s' % (checksum, self.request.get('checksum')))
          return
-
+      
+      # Sanity checks are finished. Do the update.
       prev = user_data.relevant_ids + ',' + \
             user_data.irrelevant_ids
       relevant_ids = ''
@@ -159,7 +171,7 @@ class MailUpdate(webapp.RequestHandler):
             # Abstract already marked: skip.
             continue
          # NB: other cases are either no answer, or non
-         # pmid post (like user id).
+         # pmid post (like uid or checksum).
          if self.request.get(name) == 'Yes':
             relevant_ids += ',' + name
          elif self.request.get(name) == 'No':

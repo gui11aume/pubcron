@@ -16,7 +16,8 @@
     <input type="submit" value="Send feedback" />
     <br />
     <br />
-    <input type="hidden" name="user" value="{{ user }}" />
+    <input type="hidden" name="uid" value="{{ uid }}" />
+    <input type="hidden" name="checksum" value="{{ checksum }}" />
   {% for abstr in Abstr_list %}
     <span class="journal_date" style="font-zie:75%;">
     {{ abstr.journal }}. {{ abstr.pubdate }}

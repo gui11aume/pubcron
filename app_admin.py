@@ -5,7 +5,7 @@ Control panel of the app, containing constants and admin stuff.
 To edit the datastore with the remote API shell run from the
 Linux command line:
 
-google_appengine/remote_api_shell.py
+path/to/google_appengine/remote_api_shell.py pubcron
 
 This starts a Python-like shell where you need to import the
 Google db module and this module because it constains the model
@@ -25,6 +25,7 @@ entries[0].put()
 """
 
 import sys
+import random
 import traceback
 
 from google.appengine.api import mail
@@ -39,6 +40,8 @@ MAXHITS = 40
 class UserData(db.Model):
    """Store user term query and date lat run."""
    user = db.UserProperty()
+   uid = db.StringProperty()
+   salt = db.StringProperty()
    term = db.StringProperty()
    term_valid = db.BooleanProperty()
    last_run = db.DateTimeProperty()
@@ -47,8 +50,26 @@ class UserData(db.Model):
 
 
 def term_key():
-    """Construct a datastore key for a Term entity."""
-    return db.Key.from_path('Term', '1')
+   """Construct a datastore key for a Term entity."""
+   return db.Key.from_path('Term', '1')
+
+def init_data(user):
+   """Initialize UserData for a new user."""
+   # Instantiate.
+   user_data = UserData(term_key())
+
+   # Initialize values.
+   user_data.user = user
+   user_data.uid = user.user_id()
+   # We need some randomness for the salt.
+   user_data.salt = unicode(random.random())
+   user_data.relevant_ids = db.Text(u'')
+   user_data.irrelevant_ids = db.Text(u'')
+
+   # Put and return.
+   user_data.put()
+   return user_data
+
 
 
 def mail_admin(useremail, msg=None):
