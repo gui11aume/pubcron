@@ -1,0 +1,78 @@
+<h1>PubCron FAQ(E)</h1>
+
+<h2>What is the difference between a FAQ and a FAQ(E)?</h2>
+<p>A FAQ aims at answering users' frequently asked questions,
+while a FAQ(E) is quite the opposite. It looks like a FAQ
+in the question-answer format, but the questions are carefully
+chosen by the developers to emphasize the strengths of their
+product.</p>
+
+<h2>What does FAQ(E) stand for?</h2>
+<p>Well, honestly... no idea.</p>
+
+<h2>What does PubCron do?</h2>
+<p>PubCron retrieves new PubMed abstracts matching your personal
+query, sorts them by relevance and sends them to you by mail.</p>
+
+<h2>How does that differ from PubCrawler?</h2>
+<p>Well, not so much really. I guess the Linux penguin in the
+title bar...</p>
+
+<h2>Is PubCron open source?</h2>
+<p>Yes. You can get the source code from
+<a href="https://github.com/gui11aume/pubcron">Github</a>.</p>
+
+<h2>What do I need to use PubCron?</h2>
+<p>You need a Google account. This is how your identity is
+recorded by PubCron. This also defines the email address
+where the results will be sent to.</p>
+
+<h2>How can I unsubscribe to PubCron?</h2>
+<p>Fill in an empty query on your PubCron's
+<a href="query.html">query</a> page.</p>
+
+<h2>How can I send relevance feedback?</h2>
+<p>You have to do it from the PubCron mails that you receive
+at your Google account email address. You can specify whether each
+abstract is relevant or not with the radio buttons after the text.
+Check "No answer" if you do not want to give relevance feedback for
+a particular abstract. Then press one of the "Send feedback" buttons
+at the beginning and the end of the mail. Note that sending the
+information from your mail client to PubCron will trigger a warning.
+</p>
+
+<h2>What do the numbers next to abstract title mean?</h2>
+<p>This is the abstract relevance score. If you never sent any
+feedback, they should all be 0. Otherwise, they tell you  how the
+given text resembles the abstracts you find relevant. A negative
+score means that the text is closer to the abstracts you marked
+as irrelevant than the ones you marked as relevant.</p>
+
+<h2>Do I have to send feedback for all articles?</h2>
+<p>Actually you do not have to send feedback at all.
+But the abstracts will come in a random order. This can
+be a problem as PubCron has a limit on the number of abstracts
+sent in each mail (currently 40). If your query returned more
+than 40 articles, some particularly relevant hits can be lost.</p>
+
+<h2>Why do I receive at most 40 articles?</h2>
+<p>Hands-on experience showed that the top 40 hits usually contain
+the most interesting abstracts. And also, without this limit the
+PubCron mail can become so large that you cannot display it in full.
+</p>
+
+<h2>Why do I get a warning message in the PubCron mail?</h2>
+<p>PubCron is a free application powered by
+<a href="http://code.google.com/appengine/">Google App Engine</a>.
+In order to stay within the limits of the quotas on traffic and
+computer power, PubCron has a limit on the articles it retrieves
+from PubMed (currently 200). If your query routinely returns
+more than this number of hits, some articles will be ignored
+(<i>i.e.</i> they will not be ranked and not be returned in the
+PubCron mail). To avoid this, make sure your query is focused
+and does not return too many hits.</p>
+
+<h2>My question was not in the list, what can I do?</h2>
+<p>You can write to the PubCron mailer (reply to any of the PubCron
+mails).</p>
+

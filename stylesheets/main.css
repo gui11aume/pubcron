@@ -1,17 +1,18 @@
-body {
-  font-family:serif;
-}
+/* Text defaults */
 h1 {
-  font-weight:bold;
-  font-size:48;
-  margin-bottom:5px;
+  font-size:300%;
 }
 h2 {
   margin-top:0px;
   font-weight:bold;
   font-size:20;
-  margin-bottom:2em;
 }
+p {
+  text-indent:1em;
+}
+
+/* Other stuff */
+
 #band {
   height:24px;
 }
@@ -49,9 +50,11 @@ h2 {
   margin-top:2em;
 }
 #footer {
-  margin-top:2em;
+  height:6em;
 }
+
 .breakword {
+  text-indent:0em;
   font-family:monospace;
   background-color:#E0E0E0; // gray
   width:495px;
@@ -70,8 +73,4 @@ h2 {
 .invalid {
   font-weight:bold;
   color:red;
-}
-.mailupdate {
-  font-weight:bold;
-  color:green;
 }

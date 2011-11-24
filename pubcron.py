@@ -45,7 +45,7 @@ def validate_pmid(idlist):
 
 
 
-class MainPage(webapp.RequestHandler):
+class Query(webapp.RequestHandler):
    def get(self):
       # Already logged in?
       user = users.get_current_user()
@@ -60,15 +60,27 @@ class MainPage(webapp.RequestHandler):
             # First user visit: create user data.
             user_data = app_admin.init_data(user)
 
-         template_values = {
+         dot = os.path.dirname(__file__)
+
+         # First fill in the content.
+         content_values = {
             'user_data': user_data,
             'user_email': user.email(),
          }
 
-         path = os.path.join(os.path.dirname(__file__),
-               'query.html')
+         content_path = os.path.join(dot, 'content', 'query_content.html')
+         content = template.render(content_path, content_values)
+
+         # Now send the page.
+         template_path = os.path.join(dot, 'pubcron_template.html')
+         template_values = {
+            'page_title': 'PubCron query',
+            'page_content': content,
+         }
+
          self.response.out.write(
-               template.render(path, template_values))
+               template.render(template_path, template_values)
+         )
 
       else:
          # Not logged in... Go log in then.
@@ -126,15 +138,7 @@ class MailUpdate(webapp.RequestHandler):
       # Add a bit of random salt.
       checksum = sha1(pmids + user_data.salt).hexdigest()
 
-      return checksum
-
-
-   def get(self):
-      self.response.out.write(open(os.path.join(
-            os.path.dirname(__file__),
-            'problem.html')
-         ).read()
-      )
+      return checksum == self.request.get('checksum')
 
 
    def post(self):
@@ -154,9 +158,8 @@ class MailUpdate(webapp.RequestHandler):
 
       # Check that user responds to mail.
       checksum = self.validate_request(user_data)
-      if not checksum == self.request.get('checksum'):
+      if not self.request.get('checksum'):
          # Invalid post paramters (hacked?!!): good-bye.
-         self.response.out.write('%s\n%s' % (checksum, self.request.get('checksum')))
          return
       
       # Sanity checks are finished. Do the update.
@@ -194,20 +197,23 @@ class MailUpdate(webapp.RequestHandler):
       # ... and put.
       user_data.put()
 
+      # Now reassure the user.
+      dot = os.path.dirname(__file__)
+      template_path = os.path.join(dot, 'pubcron_template.html')
+      content_path = os.path.join(dot, 'content', 'feedback_content.html')
+
       template_values = {
-            'user_data': user_data,
+         'page_title': 'PubCron feedback',
+         'page_content': open(content_path).read(),
       }
-
-      path = os.path.join(os.path.dirname(__file__),
-            'feedback.html')
-
       self.response.out.write(
-            template.render(path, template_values))
+         template.render(template_path, template_values)
+      )
 
 
 
 application = webapp.WSGIApplication([
-  ('/query.html', MainPage),
+  ('/query.html', Query),
   ('/update', UpdateTerm),
   ('/mailupdate', MailUpdate),
 ], debug=True)

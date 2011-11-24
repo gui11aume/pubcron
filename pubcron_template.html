@@ -1,0 +1,29 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <title>{{ page_title|safe }}</title>
+    <link type="text/css" rel="stylesheet" href="stylesheets/main.css" />
+    <style type="text/css">
+    <!--{{ page_css|safe }}-->
+    </style>
+  </head>
+  <body>
+    <div id="band">
+      <div id="linea"></div>
+      <div id="lineb"></div>
+      <div id="linec"></div>
+    </div>
+    <div id="links"><!-- navigation -->
+      <a href="/query.html"><img src="images/myquery.jpg" border="0"></a>
+      <a href="/help.html"><img src="images/help.jpg" border="0"></a>
+      <a href="/FAQE.html"><img src="images/FAQE.jpg" border="0"></a>
+    </div>
+    <div id="spacer"></div>
+    <div id="main_container">
+      <div id="body">{{ page_content|safe }}
+        <div id="footer"></div>
+      </div>
+    </div>
+  </body>
+</html>
