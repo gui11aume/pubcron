@@ -54,28 +54,23 @@ class Despatcher(webapp.RequestHandler):
          if not user_data.term_valid:
             continue
 
-
-         yesterday = datetime.datetime.today() + \
-               datetime.timedelta(days = -1)
-         day_before = yesterday+ datetime.timedelta(days = -1)
+         # Today, yesterday, one year ago.
+         today = datetime.datetime.today()
+         yesterday = today + datetime.timedelta(days = -1)
          one_year_ago = datetime.datetime.today() + \
                datetime.timedelta(days = -365)
 
-         date_from = last_run or yesterday
-         date_to = max(yesterday, date_from)
-
-         term_recent = "("+term+")" + \
-               date_from.strftime("+AND+(%Y%%2F%m%%2F%d:") + \
-               date_to.strftime("%Y%%2F%m%%2F%d[crdt])")
+         term_today = "("+term+")" + \
+               today.strftime("+AND+(%Y%%2F%m%%2F%d[crdt])")
 
          term_older = "("+term+")" + \
                one_year_ago.strftime("+AND+(%Y%%2F%m%%2F%d:") + \
-               day_before.strftime("%Y%%2F%m%%2F%d[crdt])")
+               yesterday.strftime("%Y%%2F%m%%2F%d[crdt])")
 
          # Fetch the abstracts.
          try:
             Abstr_list = eUtils.fetch_Abstr(
-                  term = term_recent,
+                  term = term_today,
                   # Limit on all queries, to keep it light.
                   retmax = app_admin.RETMAX,
                   email = app_admin.admail
