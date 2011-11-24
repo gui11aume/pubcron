@@ -1,4 +1,7 @@
 /* Text defaults */
+body {
+  font-family:"Serif";
+}
 h1 {
   font-size:300%;
 }
