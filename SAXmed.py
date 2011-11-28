@@ -38,7 +38,10 @@ class eSearchResultHandler(handler.ContentHandler):
       if field:
          self.termdict[field] = self.data
       if self._errors:
-         # Within the "ErrorList" node.
+         # Within the "ErrorList" node, append key-value tuple
+         # with the end of the stack and the data, like
+         # ([node, child, grandchild], data). For example:
+         # ([u'PhraseNotFound'], u'2011/11/28[crdt]')
          self.termdict['errors'].append(
                (self._stack[-1:], self.data.strip())
          )

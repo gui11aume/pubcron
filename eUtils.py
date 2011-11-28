@@ -109,6 +109,9 @@ def get_hit_count(term, **kwargs):
       raise PubMedException(query.get('errors'))
 
    # Check hit count.
+   # NB: in case PubMed issues a 'PhraseNotFound' error
+   # there will be no hit, but the command above will
+   # have fired a PubMedException before we get here.
    count = int(query.get('count', 0))
    if count == 0:
       raise NoHitException(term)

@@ -22,13 +22,39 @@ class Despatcher(webapp.RequestHandler):
    saved user terms and send them a mail."""
 
    def get(self):
-
+ 
       # Debug mode: /send?debug=your.name@example.com
       debug = self.request.get('debug', False)
-
       # Path to the mail html template.
       path_to_hits = os.path.join(os.path.dirname(__file__),
             'hits.html')
+
+
+      # Today, yesterday, one year ago.
+      today = datetime.datetime.today()
+      yesterday = today + datetime.timedelta(days = -1)
+      one_year_ago = datetime.datetime.today() + \
+            datetime.timedelta(days = -365)
+
+      # Check if there is anything new on PubMed today.
+      try:
+         n_crdt = eUtils.get_hit_count(
+               term = today.strftime("%Y%%2F%m%%2F%d[crdt]"),
+               email = app_admin.admail
+         )
+      except eUtils.PubMedException, e:
+         # If PubMed returns a 'PhraseNotFound' with today's date
+         # nothing is happening: just notify admin.
+         if e.args == ([([u'PhraseNotFound'],
+                       today.strftime("%Y/%m/%d[crdt]"))],):
+            app_admin.mail_admin(app_admin.admail, 'No PubMed update.')
+         # Else send the full error trace.
+         else:
+            app_admin.mail_admin(app_admin.admail)
+         # In both cases see you tomorrow!
+         return
+            
+
 
       # Get all users data.
       data = app_admin.UserData.gql(
@@ -54,11 +80,6 @@ class Despatcher(webapp.RequestHandler):
          if not user_data.term_valid:
             continue
 
-         # Today, yesterday, one year ago.
-         today = datetime.datetime.today()
-         yesterday = today + datetime.timedelta(days = -1)
-         one_year_ago = datetime.datetime.today() + \
-               datetime.timedelta(days = -365)
 
          term_today = "("+term+")" + \
                today.strftime("+AND+(%Y%%2F%m%%2F%d[crdt])")
