@@ -4,12 +4,15 @@ runtime: python
 api_version: 1
 
 handlers:
-
 - url: /stylesheets
   static_dir: stylesheets
 
 - url: /images
   static_dir: images
+
+- url: /favicon\.ico
+  static_files: images/favicon.ico
+  upload: images/favicon\.ico
 
 - url: /send
   script: send.py
