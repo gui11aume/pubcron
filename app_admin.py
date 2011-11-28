@@ -86,6 +86,6 @@ def mail_admin(useremail, msg=None):
    mail.send_mail(
        admail,
        admail,
-       "Pubcron mail report",
-       "Error report for user %s:\n%s" % (useremail, msg)
+       "PubCron report",
+       "%s:\n%s" % (useremail, msg)
    )
