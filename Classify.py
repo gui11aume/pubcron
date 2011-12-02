@@ -2,25 +2,26 @@
 
 import tfidf
 
-def update_score_inplace(test, relevant, irrelevant, aux=[]):
-   """Update in place the 'score' attribute of Abstr instances
-   in the 'test' iterable. The relevance score is the difference
-   between the max cosine similarities with relevant and irrelevant
-   documents of the corpus."""
+def update_score_inplace(abstr_list, relevant_docs,
+      irrelevant_docs, mu_corpus=[]):
 
-   n1 = len(test)
-   n2 = len(test) + len(relevant)
-   n3 = len(test) + len(relevant) + len(irrelevant)
+   """Update in place the 'score' field of JSON-like documents.
 
-   main_corpus = [a.text for a in test + relevant + irrelevant]
-   aux_corpus = [a.text for a in aux]
+   The relevance score of a given abstract a is (math notation):
+   max {cosine(a,r) | r relevant} - max {cosine(a,i) | i rrelevant}"""
 
-   I = tfidf.CorpusIndex(main_corpus, aux_corpus)
-   for i in range(n1):
-      test[i].score = 10 * round(
-             max([I.cosine(i,j) for j in range(n1, n2)]) - \
-             max([I.cosine(i,j) for j in range(n2, n3)]), 3
-         )
+   new_texts = [abstr['text'] for abstr in abstr_list]
+   new_tfidfs = tfidf.compute_from_texts(new_texts, mu_corpus)
 
-
-
+   for (doc, new_tfidf) in zip(abstr_list, new_tfidfs):
+      cosine_relevant = [
+            tfidf.cosine(new_tfidf, relevant_doc['tfidf']) \
+            for relevant_doc in relevant_docs
+      ]
+      cosine_irrelevant = [
+            tfidf.cosine(new_tfidf, irrelevant_doc['tfidf']) \
+            for irrelevant_doc in irrelevant_docs
+      ]
+      doc['score'] = 10 * round(
+             max(cosine_relevant) - max(cosine_irrelevant), 3
+      )

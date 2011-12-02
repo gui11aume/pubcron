@@ -15,6 +15,9 @@ from xml.sax import make_parser
 # Base link to eUtils.
 BASE = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 
+# Number of PMIDs to query at a time.
+MAX_ID_NUMBER_PER_REQUEST = 50
+
 
 ##########################################
 ######          Exceptions          ######
@@ -36,33 +39,37 @@ class PubMedException(eSearchException):
 ##########################################
 
 
-def fetch_Abstr(term, **kwargs):
-   """Query PubMed and return a list of Abstr instances."""
+def fetch_abstr(term, **kwargs):
+   """Query PubMed and return a list of JSON-like PubMed abstract
+   data models."""
 
    # Note: The memory usage is about 1 Mb per 100 PubMed abstracts.
-   Abstr_list = []
+   abstr_list = []
    parser = make_parser()
-   parser.setContentHandler(eFetchResultHandler(Abstr_list))
+   parser.setContentHandler(eFetchResultHandler(abstr_list))
    parser.parse(fetch_XML(term, **kwargs))
-   return Abstr_list
+   return abstr_list
 
 
 def fetch_ids(id_list, **kwargs):
-   """Query PubMed with a list of ids and return a list of
-   Abstr instances."""
+   """Like fetch_abstr, but query PubMed with a list of PMIDs."""
 
-   # Query 50 ids at a time (otherwise the URL is too long).
+   # Query a limited amount of ids at a time (otherwise the URL
+   # is too long).
+
    n = len(id_list)
-   id_chunks = [
-       ','.join(id_list[i*50:(i+1)*50-1]) for i in range(1+(n-1)/50)
+   k = MAX_ID_NUMBER_PER_REQUEST
+   id_chunk_list = [
+   # Looks like ['12345678,12345678,12...', '12345678,123...', ...]
+       ','.join(id_list[i*k:(i+1)*k-1]) for i in range(1+(n-1)/k)
    ]
 
-   Abstr_list = []
+   abstr_list = []
    parser = make_parser()
-   parser.setContentHandler(eFetchResultHandler(Abstr_list))
-   for id_chunk in id_chunks:
+   parser.setContentHandler(eFetchResultHandler(abstr_list))
+   for id_chunk in id_chunk_list:
       parser.parse(eFetch_query(id=id_chunk))
-   return Abstr_list
+   return abstr_list
 
 
 def fetch_XML(term, **kwargs):

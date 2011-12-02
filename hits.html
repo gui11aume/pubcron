@@ -1,6 +1,6 @@
 <html>
  <body>
-  <form name="relevance" action="https://pubcron.appspot.com/mailupdate" method="post">
+  <form name="relevance" action="https://pubcron.appspot.com/feedback" method="post">
     <p>Your <a href="http://pubcron.appspot.com">PubCron</a> query
     returned <b>{{ nhits }}</b> hits. {{ maxhit_exceeded }}</p>
     {% if retmax_exceeded %}
@@ -18,7 +18,7 @@
     <br />
     <input type="hidden" name="uid" value="{{ uid }}" />
     <input type="hidden" name="checksum" value="{{ checksum }}" />
-  {% for abstr in Abstr_list %}
+  {% for abstr in abstr_list %}
     <span class="journal_date" style="font-zie:75%;">
     {{ abstr.journal }}. {{ abstr.pubdate }}
     </span><br />
