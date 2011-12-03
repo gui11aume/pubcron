@@ -61,12 +61,11 @@ def compute_from_texts(texts, aux=[]):
    for txt in texts:
       # Count words in text.
       wcounts_for_this_text = defaultdict(int)
-      total = 0.0
       for word in txt:
          wcounts_for_this_text[word] += 1
       # Compute term frequencies, update doc frequencies.
       tf_for_this_text = {}
-      total = float(sum(wcounts_for_this_text.values()))
+      total = float(len(txt))
       for word in wcounts_for_this_text:
          tf_for_this_text[word] = wcounts_for_this_text[word] / total
          docf[word] += 1
@@ -75,7 +74,7 @@ def compute_from_texts(texts, aux=[]):
 
       # Add the terms in auxiliary corpus to doc frequencies.
       for txt in aux:
-         for w in set(txt): docf[word] += 1
+         for word in set(txt): docf[word] += 1
 
    # Last loop to compute tf-idf scores.
    corpus_size = len(texts) + len(aux)

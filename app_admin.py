@@ -56,6 +56,8 @@ class UserData(db.Model):
    mu_corpus = db.TextProperty()
    relevant_docs = db.TextProperty()
    irrelevant_docs = db.TextProperty()
+   relevant_ids = db.TextProperty()    #################
+   irrelevant_ids = db.TextProperty()  #################
 
 
 def term_key():

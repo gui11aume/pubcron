@@ -68,7 +68,6 @@ class eFetchResultHandler(handler.ContentHandler):
        'author_list': [ 'A First', 'B Second', ..., 'Z Last' ],
        'authors': 'A First, B Second, ..., Z Last',
        'text': 'Abstract text.'
-       'mesh': [u'Term1', u'Term2', ...]
    }
 
    NB: By default, abstracts without a text are not returned.
@@ -95,7 +94,7 @@ class eFetchResultHandler(handler.ContentHandler):
       ARTICLE + ('AuthorList', 'Author', 'Initials'): 'intls',
 #     ARTICLE + ('Language',): 'language',
 #     ARTICLE + ('PublicationTypeList', 'PublicationTypes'): 'pubtypes',
-      ROOT + ('MeshHeadingList', 'MeshHeading', 'DescriptorName'): 'mesh'
+#     ROOT + ('MeshHeadingList', 'MeshHeading', 'DescriptorName'): 'mesh'
    }
 
    def __init__(self, abstr_list, return_empty=False):
@@ -170,8 +169,6 @@ class eFetchResultHandler(handler.ContentHandler):
       # Format authors to a single line of text.
       abstr['authors'] = ', '.join(abstr['author_list'])
       abstr['text'] = ''.join(self._dict['text'])
-
-      abstr['mesh'] = self._dict['mesh']
 
       # Append (list is passed by reference).
       self.abstr_list.append(abstr)

@@ -75,6 +75,12 @@ more than this number of hits, some articles will be ignored
 PubCron mail). To avoid this, make sure your query is focused
 and does not return too many hits.</p>
 
+<h2>I gave relevance feedback. Why articles still have a score
+of 0.0?</h2>
+<p>You probably gave feedback for relevant articles only. PubCron
+can compute a relevance score only if you also give feedback for
+irrelevant articles.</p>
+
 <h2>Will PubCron always be free?</h2>
 <p>That's the plan. If Google App Engine ever removes support for free
 apps, or if the number of PubCron users becomes too big to stay
