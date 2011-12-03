@@ -62,7 +62,7 @@ class CorpusIndex():
 
       # Add the terms in auxiliary corpus to doc frequencies.
       for txt in aux:
-         for w in set(txt): docf[word] += 1
+         for word in set(txt): docf[word] += 1
 
       # Last loop to compute tf-idf scores.
       corpus_size = len(texts) + len(aux)
