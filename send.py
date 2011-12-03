@@ -88,13 +88,6 @@ class Despatcher(webapp.RequestHandler):
                one_year_ago.strftime("+AND+(%Y%%2F%m%%2F%d:") + \
                yesterday.strftime("%Y%%2F%m%%2F%d[crdt])")
 
-         #-------------     BEGIN  DEBUG         -------------#
-         app_admin.mail_admin(
-            user_data.user.email(),
-            'term report (check):\n%s\n%s' % (term_today, term_older)
-         )
-         #-------------      END  DEBUG          -------------#
-
          # Fetch the abstracts.
          try:
             Abstr_list = eUtils.fetch_Abstr(
