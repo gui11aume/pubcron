@@ -11,7 +11,8 @@ This starts a Python-like shell where you need to import the
 Google db module and this module because it constains the model
 for the datastore.
 
-from google.appengine.ext import db
+import sys
+sys.path.append('path/to/pubcron/')
 import app_admin
 
 Get the data as follows:
