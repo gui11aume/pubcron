@@ -15,19 +15,19 @@ handlers:
   upload: images/favicon\.ico
 
 - url: /send
-  script: send.py
+  script: pubcron_send.py
   login: admin
 
 - url: /(update|query.html?)
-  script: pubcron.py
+  script: pubcron_my_query.py
   login: required
 
-- url: /mailupdate
-  script: pubcron.py
+- url: /feedback
+  script: pubcron_feedback.py
   secure: optional
 
 - url: /.*
-  script: nologin.py
+  script: pubcron_nologin.py
 
 builtins:
 - remote_api: on

@@ -54,19 +54,25 @@ class eSearchResultHandler(handler.ContentHandler):
 
 
 class eFetchResultHandler(handler.ContentHandler):
-   """Parse PubMed eFetch XML results. Update a list in place
-   that has to be provided upon initialization.
+   """Parse PubMed eFetch XML results. Update in place a list of
+   JSON-like documents (passed by reference). This format is flexible
+   (if formating is needed) and can be easily serialized to text
+   format.
+
+   Each abstract is stored into a JSON-like document:
+   {
+       'pmid': '12345678',
+       'journal': 'Journal name',
+       'pubdate': 'Jan 01 2001',
+       'title': 'Article title',
+       'author_list': [ 'A First', 'B Second', ..., 'Z Last' ],
+       'authors': 'A First, B Second, ..., Z Last',
+       'text': 'Abstract text.'
+   }
 
    NB: By default, abstracts without a text are not returned.
-   Initialize the instance with 'return_empty=True' to get them."""
-
-   class Abstr:
-      """Only a namespace for this module. But Abstr isntances
-      can be sorted based on scores, if given as attributes."""
-
-      def __lt__(self, other):
-         return self.score < other.score
-
+   In order to get them anyway, pass 'return_empty=True' to the
+   constructor."""
 
    ROOT = ('PubmedArticleSet', 'PubmedArticle', 'MedlineCitation')
    ARTICLE = ROOT + ('Article',)
@@ -91,7 +97,7 @@ class eFetchResultHandler(handler.ContentHandler):
 #     ROOT + ('MeshHeadingList', 'MeshHeading', 'DescriptorName'): 'mesh'
    }
 
-   def __init__(self, Abstr_list, return_empty=False):
+   def __init__(self, abstr_list, return_empty=False):
       """Initialize a 'defaultdict' of collected terms, and
       _stack/data variables used for data collection."""
 
@@ -103,8 +109,8 @@ class eFetchResultHandler(handler.ContentHandler):
       self._dict = defaultdict(list)
       self._stack = []
       self.data = ''
-      # 'Abstr_list' passed by reference.
-      self.Abstr_list = Abstr_list
+      # 'abstr_list' passed by reference.
+      self.abstr_list = abstr_list
 
    def startElement(self, name, attrs):
       self.data = ''
@@ -113,7 +119,7 @@ class eFetchResultHandler(handler.ContentHandler):
 
    def endElement(self, name):
 
-      if name == 'PubmedArticle': self.wrap()
+      if name == 'PubmedArticle': self.json_wrap()
 
       field = self.FIELDS.get(tuple(self._stack))
       # Update the given field by list-extension
@@ -128,29 +134,41 @@ class eFetchResultHandler(handler.ContentHandler):
       self.data += data
 
 
-   def wrap(self):
-      """Wrap an instance  of Abstr with few attributes."""
+   def json_wrap(self):
+      """Wrap an abstract to JSON-like document."""
 
       # Abstracts without a text are discarded by default.
       if not self.return_empty and not self._dict.has_key('text'):
          return
 
-      # Define attributes 'pmid', 'journal', 'pubdate', 'title',
-      # 'authors' and 'text'.
-      abstr = self.Abstr()
+      abstr = {}
 
-      # NB: '_dict' is a default dict, so by the use of 'join()'
-      # the attributes are always defined, but possibly empty.
-      abstr.pmid = ':'.join(self._dict['pmid'])
-      abstr.journal = ''.join(self._dict['jrnl'])
-      abstr.pubdate = ' '.join(
-         self._dict['month'] + self._dict['day'] + self._dict['year']
+      # Define fields 'pmid', 'journal', 'pubdate', 'title', 'authors'
+      # and 'text'. NB: '_dict' is a default dict, so by the use of
+      # 'join()' the attributes are always defined, but possibly empty.
+      # Joining on "_PARSE_ERROR_" the fields that are supposed to
+      # be unique helps reveal mis-formatted abstract models.
+
+      abstr['pmid'] = '_PARSE_ERROR_'.join(self._dict['pmid'])
+      abstr['journal'] = '_PARSE_ERROR_'.join(self._dict['jrnl'])
+
+      # NB: I do not implement a datetime.datetime object because
+      # some PubMed pubdates specify only the month and the year.
+      # Field 'pubdate' looks like "Jan 1 2001".
+      abstr['pubdate'] = ' '.join(
+         self._dict['month'] \
+         + self._dict['day'] \
+         + self._dict['year']
       )
-      abstr.title = ''.join(self._dict['title'])
-      abstr.authors = ', '.join([
-            ' '.join(a) \
-            for a in zip(self._dict['intls'], self._dict['name'])
-      ])
-      abstr.text = ''.join(self._dict['text'])
+      abstr['title'] = '_PARSE_ERROR_'.join(self._dict['title'])
+      # Field 'authors' looks like ["A First", "B Second", ..., "Z Last"]
+      abstr['author_list'] = [
+            ' '.join(intls_name) \
+            for intls_name in zip(self._dict['intls'], self._dict['name'])
+      ]
+      # Format authors to a single line of text.
+      abstr['authors'] = ', '.join(abstr['author_list'])
+      abstr['text'] = ''.join(self._dict['text'])
 
-      self.Abstr_list.append(abstr)
+      # Append (list is passed by reference).
+      self.abstr_list.append(abstr)

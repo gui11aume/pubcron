@@ -16,7 +16,11 @@ query, sorts them by relevance and sends them to you by mail.</p>
 
 <h2>How does that differ from PubCrawler?</h2>
 <p>Well, not so much really. I guess the Linux penguin in the
-title bar...</p>
+title bar of PubCrawler has been replaced by a green book...
+Not that PubCron has anything against penguins by the way. It's
+just that a book seemed more appropriate. Still, if you're a
+penguin type of person, you should definitely check out
+<a href="http://pubcrawler.gen.tcd.ie/">PubCrawler</a>.</p>
 
 <h2>Is PubCron open source?</h2>
 <p>Yes. You can get the source code from
@@ -70,6 +74,17 @@ more than this number of hits, some articles will be ignored
 (<i>i.e.</i> they will not be ranked and not be returned in the
 PubCron mail). To avoid this, make sure your query is focused
 and does not return too many hits.</p>
+
+<h2>I gave relevance feedback. Why articles still have a score
+of 0.0?</h2>
+<p>You probably gave feedback for relevant articles only. PubCron
+can compute a relevance score only if you also give feedback for
+irrelevant articles.</p>
+
+<h2>Will PubCron always be free?</h2>
+<p>That's the plan. If Google App Engine ever removes support for free
+apps, or if the number of PubCron users becomes too big to stay
+under the quotas for free apps we'll have to think of something.</p>
 
 <h2>My question was not in the list, what can I do?</h2>
 <p>You can write to the PubCron mailer (reply to any of the PubCron

@@ -11,14 +11,15 @@ This starts a Python-like shell where you need to import the
 Google db module and this module because it constains the model
 for the datastore.
 
-from google.appengine.ext import db
+import sys
+sys.path.append('path/to/pubcron/')
 import app_admin
 
 Get the data as follows:
 entries = app_admin.UserData.all().fetch(10) # Or more.
 
 Get the field value as follows:
-entries[0].irrelevant_ids
+entries[0].irrelevant_docs
 
 And save them like that:
 entries[0].put()
@@ -32,10 +33,17 @@ from google.appengine.api import mail
 from google.appengine.ext import db
 
 # -------------------------------------------------------------------
-admail = 'pubcron.mailer@gmail.com'
+ADMAIL = 'pubcron.mailer@gmail.com'
 RETMAX = 200 
 MAXHITS = 40
 # -------------------------------------------------------------------
+
+# NB: 'db.TextProperty()' is used as JSON dump to model complex data.
+# mu_corpus_json is a list of preprocessed abstract texts.
+#    { pmid: [ stemmed_word1, stemmed_word2, ... ], ... }
+# relevant_docs and irrelevant_docs are JSON dictionaries indexed by PMID.
+# The value is an array of 2 elements: title and the tf-idf dictionary.
+#    { pmid: [ title, { word1: tfidf1: word2, tfidf2, ... } ], ... }
 
 class UserData(db.Model):
    """Store user term query and date lat run."""
@@ -45,8 +53,9 @@ class UserData(db.Model):
    term = db.StringProperty()
    term_valid = db.BooleanProperty()
    last_run = db.DateTimeProperty()
-   relevant_ids = db.TextProperty()
-   irrelevant_ids = db.TextProperty()
+   mu_corpus = db.TextProperty()
+   relevant_docs = db.TextProperty()
+   irrelevant_docs = db.TextProperty()
 
 
 def term_key():
@@ -63,8 +72,8 @@ def init_data(user):
    user_data.uid = user.user_id()
    # We need some randomness for the salt.
    user_data.salt = unicode(random.random())
-   user_data.relevant_ids = db.Text(u'')
-   user_data.irrelevant_ids = db.Text(u'')
+   user_data.relevant_docs = db.Text(u'')
+   user_data.irrelevant_docs = db.Text(u'')
 
    # Put and return.
    user_data.put()
@@ -72,20 +81,20 @@ def init_data(user):
 
 
 
-def mail_admin(useremail, msg=None):
+def mail_admin(user_mail, message=None):
    """Send a mail to admin. If no message is specified,
    send an error traceback."""
 
-   if msg is None:
-      msg = ''.join(traceback.format_exception(
+   if message is None:
+      message = ''.join(traceback.format_exception(
          sys.exc_type,
          sys.exc_value,
          sys.exc_traceback
       ))
 
    mail.send_mail(
-       admail,
-       admail,
+       ADMAIL,
+       ADMAIL,
        "PubCron report",
-       "%s:\n%s" % (useremail, msg)
+       "%s:\n%s" % (user_mail, message)
    )
