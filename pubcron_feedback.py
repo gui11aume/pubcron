@@ -106,25 +106,31 @@ class Feedback(webapp.RequestHandler):
       # Clear new docs from user data (in case users are notifying
       # that they change their mind on relevance).
       pmids_to_update = new_relevant_pmids + new_irrelevant_pmids
-      for doc_list in (relevant_docs, irrelevant_docs):
-         for doc in doc_list:
-            if doc.get('pmid') in ids_to_update:
-               doc_list.remove(doc)
+      for relevant_then_irrelevant in (relevant_docs, irrelevant_docs):
+         for doc in relevant_then_irrelevant:
+            if doc.get('pmid') in pmids_to_update:
+               relevant_then_irrelevant.remove(doc)
+
 
       # Now, get the PubMed data and compute tf-idf.
       for (new_ids, doc_list) in (
             (new_relevant_pmids, relevant_docs),
             (new_irrelevant_pmids, irrelevant_docs)):
 
-         new_json = eUtils.fetch_ids(new_ids)
+         new_docs = eUtils.fetch_ids(new_ids)
          new_tfidf = tfidf.compute_from_texts(
-             [abstr.get('text', '') for abstr in new_json],
+             [abstr.get('text', '') for abstr in new_docs],
              mu_corpus.values()
          )
-         for (doc, tfidf_dict) in zip (new_json, new_tfidf):
+         for (doc, tfidf_dict) in zip (new_docs, new_tfidf):
+            # Keep only fields 'pmid' and 'title'.
+            for field_name in doc.keys():
+               if not field_name in ('pmid', 'title'):
+                  doc.pop(field_name, None)
+            # Add field 'tfidf'.
             doc['tfidf'] = tfidf_dict
          # Append to user data.
-         doc_list.extend(new_json)
+         doc_list.extend(new_docs)
 
 
       # Update the documents...
@@ -140,7 +146,8 @@ class Feedback(webapp.RequestHandler):
       # Now reassure the user with a warm HTML page :-)
       dot = os.path.dirname(__file__)
       template_path = os.path.join(dot, 'pubcron_template.html')
-      content_path = os.path.join(dot, 'content', 'feedback_content.html')
+      content_path = os.path.join(dot, 'content',
+            'feedback_content.html')
 
       template_values = {
          'page_title': 'PubCron feedback',

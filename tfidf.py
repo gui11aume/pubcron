@@ -28,6 +28,13 @@ stopw = set(('a', 'about', 'again', 'all', 'almost', 'also',
    'which', 'while', 'with', 'within', 'without', 'would'))
 
 
+class ShortFloat(float):
+   """Subclass of float for short JSON serialization. This keeps
+   the number of digits to 3 fo tfidf and saves a lot of disk
+   space."""
+   def __repr__(self):
+      return '%.3f' % self
+
 def preprocess(txt, stem=PorterStemmer().stem):
    # NB: The memory usage is about 2 Mb per 100 PubMed abstracts.
    # Lower-case and tokenize the texts, also remove numbers.
@@ -77,12 +84,12 @@ def compute_from_texts(texts, aux=[]):
          for word in set(txt): docf[word] += 1
 
    # Last loop to compute tf-idf scores.
-   corpus_size = len(texts) + len(aux)
+   corpus_size = float(len(texts) + len(aux))
    tfidf_dicts = []
    for this_tf in termf_dicts:
       this_tfidf = {}
       for w in this_tf:
-         this_tfidf[w] = this_tf[w] * log(corpus_size / float(docf[w]))
+         this_tfidf[w] = ShortFloat(this_tf[w]*log(corpus_size/docf[w]))
 
       tfidf_dicts.append(this_tfidf)
 
