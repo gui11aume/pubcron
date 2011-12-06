@@ -37,14 +37,16 @@ class QueryPage(webapp.RequestHandler):
          self.redirect(users.create_login_url(self.request.uri))
 
       else:
-         # User is logged in: welcome to your personal query page!
+         # User is logged in.
          data = app_admin.UserData.gql('WHERE ANCESTOR IS :1 AND user = :2',
                app_admin.term_key(), user)
-         try:
-            user_data = data[0]
-         except IndexError:
-            # First user visit: create user data.
+         
+         very_first_user_login = len(data) == 0
+         if very_first_user_login:
+            # Grab a new instance of user data.
             user_data = app_admin.init_data(user)
+         else:
+            user_data = data[0]
 
          dot = os.path.dirname(__file__)
 

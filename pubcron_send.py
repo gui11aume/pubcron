@@ -98,7 +98,8 @@ class Despatcher(webapp.RequestHandler):
             )
 
             user_gave_relevance_feedback = \
-                  user_data.relevant_docs and user_data.irrelevant_docs
+                  json.loads(user_data.relevant_docs) and \
+                  json.loads(user_data.irrelevant_docs)
 
             if not user_gave_relevance_feedback:
                # No relevance feedback: set all scores to 0 and move on.
