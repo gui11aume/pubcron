@@ -41,7 +41,7 @@ class QueryPage(webapp.RequestHandler):
          data = app_admin.UserData.gql('WHERE ANCESTOR IS :1 AND user = :2',
                app_admin.term_key(), user)
          
-         very_first_user_login = len(data) == 0
+         very_first_user_login = data.count() == 0
          if very_first_user_login:
             # Grab a new instance of user data.
             user_data = app_admin.init_data(user)
