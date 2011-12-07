@@ -38,8 +38,7 @@ class QueryPage(webapp.RequestHandler):
 
       else:
          # User is logged in.
-         data = app_admin.UserData.gql('WHERE ANCESTOR IS :1 AND user = :2',
-               app_admin.term_key(), user)
+         data = app_admin.UserData.gql('WHERE user = :1', user)
          
          very_first_user_login = data.count() == 0
          if very_first_user_login:
@@ -110,11 +109,7 @@ class UpdateTerm(webapp.RequestHandler):
 
       else:
          # User is logged in.
-         data = app_admin.UserData.gql(
-               'WHERE ANCESTOR IS :1 AND user = :2',
-               app_admin.term_key(), user
-         )
-
+         data = app_admin.UserData.gql('WHERE user = :1', user)
          user_data = data[0]
 
          # Update user's query term.

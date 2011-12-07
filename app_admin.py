@@ -58,14 +58,10 @@ class UserData(db.Model):
    irrelevant_docs = db.TextProperty()
 
 
-def term_key():
-   """Construct a datastore key for a Term entity."""
-   return db.Key.from_path('Term', '1')
-
 def init_data(user):
    """Initialize UserData for a new user."""
    # Instantiate.
-   user_data = UserData(term_key())
+   user_data = UserData()
 
    # Initialize values.
    user_data.user = user

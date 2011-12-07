@@ -59,10 +59,7 @@ class Feedback(webapp.RequestHandler):
       # Who is it? Get it from the POST parameters.
       uid = self.request.get('uid')
 
-      data = app_admin.UserData.gql(
-            'WHERE ANCESTOR IS :1 AND uid = :2',
-            app_admin.term_key(), uid
-      )
+      data = app_admin.UserData.gql('WHERE uid = :1', uid)
       try:
          user_data = data[0]
       except IndexError:
