@@ -58,10 +58,15 @@ class UserData(db.Model):
    irrelevant_docs = db.TextProperty()
 
 
+def user_key():
+   """Construct a datastore key for a UserData entity."""
+   return db.Key.from_path('User', '1')
+
+
 def init_data(user):
    """Initialize UserData for a new user."""
    # Instantiate.
-   user_data = UserData()
+   user_data = UserData(term_key())
 
    # Initialize values.
    user_data.user = user
@@ -74,7 +79,6 @@ def init_data(user):
    # Put and return.
    user_data.put()
    return user_data
-
 
 
 def mail_admin(user_mail, message=None):
