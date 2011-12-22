@@ -58,9 +58,9 @@ class Despatcher(webapp.RequestHandler):
 
       # Get all users data.
       data = app_admin.UserData.gql(
-            "WHERE ANCESTOR IS :1",
-            app_admin.term_key()
-      )
+                  "WHERE ANCESTOR IS :1",
+                  app_admin.term_key()
+             )
 
       for user_data in data:
 
