@@ -83,9 +83,9 @@ def init_data(user):
    user_data.uid = user.user_id()
    # We need some randomness for the salt.
    user_data.salt = unicode(random.random())
-   mu_corpus = db.BlobProperty(empty_dict)
-   user_data.relevant_docs = db.BlobProperty(empty_list)
-   user_data.irrelevant_docs = db.BlobProperty(empty_list)
+   mu_corpus = empty_dict
+   user_data.relevant_docs = empty_list
+   user_data.irrelevant_docs = empty_list
 
    # Put and return.
    user_data.put()

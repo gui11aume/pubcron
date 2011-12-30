@@ -132,12 +132,8 @@ class Feedback(webapp.RequestHandler):
 
 
       # Update the documents...
-      user_data.relevant_docs = db.BlobProperty(
-           zlib.compress(json.dumps(relevant_docs))
-      )
-      user_data.irrelevant_docs = db.BlobProperty(
-           zlib.compress(json.dumps(irrelevant_docs))
-      )
+      user_data.relevant_docs = zlib.compress(json.dumps(relevant_docs))
+      user_data.irrelevant_docs = zlib.compress(json.dumps(irrelevant_docs))
       # ... and put.
       user_data.put()
 
