@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import zlib
 try:
    import json
 except ImportError:
@@ -98,8 +99,8 @@ class Despatcher(webapp.RequestHandler):
             )
 
             user_gave_relevance_feedback = \
-                  json.loads(user_data.relevant_docs) and \
-                  json.loads(user_data.irrelevant_docs)
+                  app_admin.decrypt(user_data, 'relevant_docs') and \
+                  app_admin.decrypt(user_data, 'irrelevant_docs')
 
             if not user_gave_relevance_feedback:
                # No relevance feedback: set all scores to 0 and move on.
@@ -108,9 +109,9 @@ class Despatcher(webapp.RequestHandler):
 
             else:
                # User gave feedback: recall their data and compute scores.
-               relevant_docs = json.loads(user_data.relevant_docs)
-               irrelevant_docs = json.loads(user_data.irrelevant_docs)
-               mu_corpus = json.loads(user_data.mu_corpus).values()
+               relevant_docs = app_admin.decrypt(user_data, 'relevant_docs')
+               irrelevant_docs = app_admin.decrypt(user_data, 'irrelevant_docs')
+               mu_corpus = app_admin.decrypt(user_data, 'mu_corpus')
 
                # Write the scores in place and sort.
                Classify.update_score_inplace(

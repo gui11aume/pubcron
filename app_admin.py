@@ -26,6 +26,11 @@ entries[0].put()
 """
 
 import sys
+import zlib
+try:
+   import json
+except ImportError:
+   import simplejson as json
 import random
 import traceback
 
@@ -79,6 +84,11 @@ def init_data(user):
    # Put and return.
    user_data.put()
    return user_data
+
+
+def decrypt(entity, field):
+   """Convenience function to extract compressed attributes."""
+   return json.loads(zlib.decompress(getattr(entity, field)))
 
 
 def mail_admin(user_mail, message=None):
