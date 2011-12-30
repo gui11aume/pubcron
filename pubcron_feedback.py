@@ -2,6 +2,7 @@
 
 import os
 import re
+import zlib
 try:
    import json
 except ImportError:
@@ -96,9 +97,9 @@ class Feedback(webapp.RequestHandler):
 
       # From here, PMIDs have been parsed and checked.
       # Now recall and parse user JSON data.
-      mu_corpus = json.loads(user_data.mu_corpus or '[]')
-      relevant_docs = json.loads(user_data.relevant_docs or '[]')
-      irrelevant_docs = json.loads(user_data.irrelevant_docs or '[]')
+      mu_corpus = app_admin.decrypt(user_data, 'mu_corpus')
+      relevant_docs = app_admin.decrypt(user_data, 'relevant_docs')
+      irrelevant_docs = app_admin.decrypt(user_data, 'irrelevant_docs')
 
       # Clear new docs from user data (in case users are notifying
       # that they change their mind on relevance).
@@ -131,11 +132,11 @@ class Feedback(webapp.RequestHandler):
 
 
       # Update the documents...
-      user_data.relevant_docs = db.Text(
-           json.dumps(relevant_docs)
+      user_data.relevant_docs = db.BlobProperty(
+           zlib.compress(json.dumps(relevant_docs))
       )
-      user_data.irrelevant_docs = db.Text(
-           json.dumps(irrelevant_docs)
+      user_data.irrelevant_docs = db.BlobProperty(
+           zlib.compress(json.dumps(irrelevant_docs))
       )
       # ... and put.
       user_data.put()

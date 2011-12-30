@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import zlib
 try:
    import json
 except ImportError:

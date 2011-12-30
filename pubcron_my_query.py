@@ -3,6 +3,7 @@
 import os
 import re
 import cgi
+import zlib
 try:
    import json
 except ImportError:
@@ -138,7 +139,7 @@ class UpdateTerm(webapp.RequestHandler):
             mu_corpus = {}
             for abstr in abstr_sample:
                mu_corpus[abstr['pmid']] = tfidf.preprocess(abstr['text'])
-            user_data.mu_corpus = json.dumps(mu_corpus)
+            user_data.mu_corpus = zlib.compress(json.dumps(mu_corpus))
             success = True
          except (TermException, eUtils.PubMedException,
                eUtils.NoHitException):

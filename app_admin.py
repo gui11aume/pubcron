@@ -43,6 +43,11 @@ RETMAX = 200
 MAXHITS = 40
 # -------------------------------------------------------------------
 
+# --
+empty_list = 'x\x9c\x8b\x8e\x05\x00\x01\x15\x00\xb9' # compression of '[]'
+empty_dict = 'x\x9c\xab\xae\x05\x00\x01u\x00\xf9'    # compression of '{}'
+# --
+
 # NB: 'db.TextProperty()' is used as JSON dump to model complex data.
 # mu_corpus_json is a list of preprocessed abstract texts.
 #    { pmid: [ stemmed_word1, stemmed_word2, ... ], ... }
@@ -78,8 +83,9 @@ def init_data(user):
    user_data.uid = user.user_id()
    # We need some randomness for the salt.
    user_data.salt = unicode(random.random())
-   user_data.relevant_docs = db.Text(u'')
-   user_data.irrelevant_docs = db.Text(u'')
+   mu_corpus = db.BlobProperty(empty_dict)
+   user_data.relevant_docs = db.BlobProperty(empty_list)
+   user_data.irrelevant_docs = db.BlobProperty(empty_list)
 
    # Put and return.
    user_data.put()
