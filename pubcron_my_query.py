@@ -7,7 +7,6 @@ try:
    import json
 except ImportError:
    import simplejson as json
-from hashlib import sha1
 
 import app_admin
 import eUtils

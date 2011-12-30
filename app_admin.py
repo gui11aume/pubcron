@@ -53,20 +53,20 @@ class UserData(db.Model):
    term = db.StringProperty()
    term_valid = db.BooleanProperty()
    last_run = db.DateTimeProperty()
-   mu_corpus = db.TextProperty()
-   relevant_docs = db.TextProperty()
-   irrelevant_docs = db.TextProperty()
+   mu_corpus = db.BlobProperty()
+   relevant_docs = db.BlobProperty()
+   irrelevant_docs = db.BlobProperty() 
 
 
 def user_key():
    """Construct a datastore key for a UserData entity."""
-   return db.Key.from_path('User', '1')
+   return db.Key.from_path('UserData', '1')
 
 
 def init_data(user):
    """Initialize UserData for a new user."""
    # Instantiate.
-   user_data = UserData(term_key())
+   user_data = UserData(user_key())
 
    # Initialize values.
    user_data.user = user
