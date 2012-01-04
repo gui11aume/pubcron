@@ -24,7 +24,7 @@ class Despatcher(webapp.RequestHandler):
    saved user terms and send them a mail."""
 
    def get(self):
- 
+
       # Debug mode: /send?debug=your.name@example.com
       debug = self.request.get('debug', False)
       # Path to the mail html template.
@@ -34,8 +34,7 @@ class Despatcher(webapp.RequestHandler):
       # Today, yesterday, one year ago.
       today = datetime.datetime.today()
       yesterday = today + datetime.timedelta(days = -1)
-      one_year_ago = datetime.datetime.today() + \
-            datetime.timedelta(days = -365)
+
 
       # Check if there is anything new on PubMed today.
       try:
@@ -54,7 +53,7 @@ class Despatcher(webapp.RequestHandler):
             app_admin.mail_admin(app_admin.ADMAIL)
          # In both cases see you tomorrow!
          return
-            
+
 
       # Get all users data.
       data = app_admin.UserData.gql(
@@ -80,13 +79,8 @@ class Despatcher(webapp.RequestHandler):
          if not user_data.term_valid:
             continue
 
-
          term_today = "("+term+")" + \
                today.strftime("+AND+(%Y%%2F%m%%2F%d[crdt])")
-
-         term_older = "("+term+")" + \
-               one_year_ago.strftime("+AND+(%Y%%2F%m%%2F%d:") + \
-               yesterday.strftime("%Y%%2F%m%%2F%d[crdt])")
 
          # Fetch the abstracts.
          try:
@@ -96,6 +90,11 @@ class Despatcher(webapp.RequestHandler):
                   retmax = app_admin.RETMAX,
                   email = app_admin.ADMAIL
             )
+
+            # There is still a chance that there is no hit
+            # (e.g. no abstract was parsed etc.)
+            if len(abstr_list) == 0:
+               continue
 
             user_gave_relevance_feedback = \
                   app_admin.decrypt(user_data, 'relevant_docs') and \
