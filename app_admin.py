@@ -62,7 +62,6 @@ class UserData(db.Model):
    salt = db.StringProperty()
    term = db.StringProperty()
    term_valid = db.BooleanProperty()
-   last_run = db.DateTimeProperty()
    mu_corpus = db.BlobProperty()
    relevant_docs = db.BlobProperty()
    irrelevant_docs = db.BlobProperty() 

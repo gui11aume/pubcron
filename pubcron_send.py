@@ -31,22 +31,28 @@ class Despatcher(webapp.RequestHandler):
       path_to_hits = os.path.join(os.path.dirname(__file__),
             'hits.html')
 
-      # Today, yesterday, one year ago.
-      today = datetime.datetime.today()
-      yesterday = today + datetime.timedelta(days = -1)
+      # Yesterday, the day before and one year ago.
+      # We query PubMed for the entries created yesterday.
+      # There is a bit of variability on the update time,
+      # so one might miss the entries of today if they are
+      # put after the cron time.
+      yesterday = datetime.datetime.today() + \
+            datetime.timedelta(days = -1)
+      the_day_before = yesterday + datetime.timedelta(days = -1)
+      one_year_ago = datetime.datetime.today() + \
+            datetime.timedelta(days = -365)
 
-
-      # Check if there is anything new on PubMed today.
+      # Check if there was anything new on PubMed yesterday.
       try:
          n_crdt = eUtils.get_hit_count(
-               term = today.strftime("%Y%%2F%m%%2F%d[crdt]"),
+               term = yesterday.strftime("%Y%%2F%m%%2F%d[crdt]"),
                email = app_admin.ADMAIL
          )
       except eUtils.PubMedException, e:
-         # If PubMed returns a 'PhraseNotFound' with today's date
+         # If PubMed returns a 'PhraseNotFound' with yesterday's date
          # nothing is happening: just notify admin.
          if e.args == ([([u'PhraseNotFound'],
-                       today.strftime("%Y/%m/%d[crdt]"))],):
+                       yesterday.strftime("%Y/%m/%d[crdt]"))],):
             app_admin.mail_admin(app_admin.ADMAIL, 'No PubMed update.')
          # Else send the full error trace.
          else:
@@ -55,7 +61,7 @@ class Despatcher(webapp.RequestHandler):
          return
 
 
-      # Get all users data.
+      # Get all user data.
       data = app_admin.UserData.gql(
                   "WHERE ANCESTOR IS :1",
                   app_admin.user_key()
@@ -64,12 +70,6 @@ class Despatcher(webapp.RequestHandler):
       for user_data in data:
 
          term = str(user_data.term)
-         last_run = user_data.last_run
-
-         # Update last time run (except when debugging).
-         if not debug:
-            user_data.last_run = datetime.datetime.now()
-            user_data.put()
 
          # While debugging, skip all users except target.
          elif user_data.user.email() != debug:
@@ -79,8 +79,13 @@ class Despatcher(webapp.RequestHandler):
          if not user_data.term_valid:
             continue
 
-         term_today = "("+term+")" + \
-               today.strftime("+AND+(%Y%%2F%m%%2F%d[crdt])")
+
+         term_yesterday = "("+term+")" + \
+               yesterday.strftime("+AND+(%Y%%2F%m%%2F%d[crdt])")
+
+         term_older = "("+term+")" + \
+               one_year_ago.strftime("+AND+(%Y%%2F%m%%2F%d:") + \
+               the_day_before.strftime("%Y%%2F%m%%2F%d[crdt])")
 
          # Fetch the abstracts.
          try:
@@ -90,11 +95,6 @@ class Despatcher(webapp.RequestHandler):
                   retmax = app_admin.RETMAX,
                   email = app_admin.ADMAIL
             )
-
-            # There is still a chance that there is no hit
-            # (e.g. no abstract was parsed etc.)
-            if len(abstr_list) == 0:
-               continue
 
             user_gave_relevance_feedback = \
                   app_admin.decrypt(user_data, 'relevant_docs') and \
