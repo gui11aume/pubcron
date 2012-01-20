@@ -1,5 +1,5 @@
 cron:
 - description: daily sending job
   url: /send
-  schedule: every day 9:00
+  schedule: every day 6:00
   target: version-1
