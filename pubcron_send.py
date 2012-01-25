@@ -134,7 +134,7 @@ def get_hits_and_send_mail(user_data):
       # (the limit in eSearch results). Let's check that
       # too while we're at it.
       yesterdays_hit_count = eUtils.get_hit_count(
-            term = term_recent,
+            term = term_yesterday,
             email = app_admin.ADMAIL
       )
       retmax_exceeded = True if \
