@@ -73,7 +73,7 @@ def get_hits_and_send_mail(user_data):
    # There is a bit of variability on the update time,
    # so one might miss the entries of today if they are
    # put after the cron time.
-   yesterday = date.today - timedelta(1)
+   yesterday = date.today() - timedelta(1)
    the_day_before = yesterday - timedelta(1)
    one_year_ago = yesterday - timedelta(365)
 
@@ -123,9 +123,9 @@ def get_hits_and_send_mail(user_data):
             reverse = True
       )
 
-      # Set a limit on hit number.
-      nhits = len(abstr_list)
-      if nhits > app_admin.MAXHITS:
+   # Set a limit on hit number.
+   nhits = len(abstr_list)
+   if nhits > app_admin.MAXHITS:
       # Send the top of the sorted list and notify the user.
       maxhit_exceeded = 'Showing only the top %d.' % \
             app_admin.MAXHITS
