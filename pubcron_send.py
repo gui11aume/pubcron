@@ -94,6 +94,10 @@ def get_hits_and_send_mail(user_data):
          email = app_admin.ADMAIL
    )
 
+   # Can be empty. No big deal, just quit.
+   if not abstr_list:
+      return
+
    user_gave_relevance_feedback = \
          app_admin.decrypt(user_data, 'relevant_docs') and \
          app_admin.decrypt(user_data, 'irrelevant_docs')
