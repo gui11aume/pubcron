@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import os
+import urllib
+from urllib2 import quote
 try:
    import json
 except ImportError:
@@ -17,6 +19,19 @@ from google.appengine.ext import webapp
 from google.appengine.api import mail
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
+
+# The file 'apikey.py' is in '.gitignore'.
+from apikey import apikey
+ALCHEMY = 'http://access.alchemyapi.com/calls/text/TextGetRankedKeywords'
+
+def alchemy_keyword_query(text):
+   data = urllib.urlencode({
+       'keywordExtractMode': 'strict',
+       'outputMode':         'json',
+       'text':                text.encode('ascii', 'ignore'),
+       'apikey':              apikey,
+   })
+   return urllib.urlopen(ALCHEMY, data).read()
 
 
 class Despatcher(webapp.RequestHandler):
@@ -52,17 +67,18 @@ class Despatcher(webapp.RequestHandler):
          if not user_data.term_valid:
             continue
 
-         try:
-            get_hits_and_send_mail(user_data)
-         except eUtils.NoHitException:
-            # No hit today. Better luck tomorrow :-)
-            continue
-         except Exception, e:
-            # For other exceptions (including PubMedExceptions), send
-            # a mail to amdin.
-            app_admin.mail_admin(user_data.user.email())
-            # And see ou tomorrow.
-            continue
+         get_hits_and_send_mail(user_data)
+#         try:
+#            get_hits_and_send_mail(user_data)
+#         except eUtils.NoHitException:
+#            # No hit today. Better luck tomorrow :-)
+#            continue
+#         except Exception, e:
+#            # For other exceptions (including PubMedExceptions), send
+#            # a mail to amdin.
+#            app_admin.mail_admin(user_data.user.email())
+#            # And see ou tomorrow.
+#            continue
 
 
 def get_hits_and_send_mail(user_data):
@@ -146,6 +162,13 @@ def get_hits_and_send_mail(user_data):
    else:
       maxhit_exceeded = ''
       retmax_exceeded = False
+
+   ## Alchemy test.
+   if user_data.user.email() == 'guillaume.filion@gmail.com':
+      for abstr in abstr_list:
+         query = json.loads(alchemy_keyword_query(abstr.get('text')))
+         abstr['keywords'] = [kw['text'] for kw in  query['keywords']]
+   
 
    # Make a security checksum.
    # 1. Concatenate the PMIDs.
