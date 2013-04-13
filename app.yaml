@@ -1,33 +1,32 @@
 application: pubcron
-version: 1
-runtime: python
+version: live
+runtime: python27
 api_version: 1
+threadsafe: no
+
+libraries:
+- name: jinja2
+  version: latest
+
+builtins:
+- deferred: on
+- remote_api: on
 
 handlers:
-- url: /stylesheets
-  static_dir: stylesheets
-
-- url: /images
-  static_dir: images
+- url: /static
+  static_dir: static
 
 - url: /favicon\.ico
-  static_files: images/favicon.ico
-  upload: images/favicon\.ico
+  static_files: static/images/favicon.ico
+  upload: static/images/favicon\.ico
 
 - url: /send
-  script: pubcron_send.py
+  script: send.app
   login: admin
 
-- url: /(update|query.html?)
-  script: pubcron_my_query.py
-  login: required
-
 - url: /feedback
-  script: pubcron_feedback.py
+  script: feedback.app
   secure: optional
 
 - url: /.*
-  script: pubcron_nologin.py
-
-builtins:
-- remote_api: on
+  script: pubcron.app

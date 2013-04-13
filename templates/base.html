@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="UTF-8">
+  <title>{% block title %}PubCron{% endblock %}</title>
+  <meta name="description" content="PubCron personal PubMed watch">
+  <link rel="stylesheet" type="text/css" media="screen"
+      href="/static/css/screen.css" />
+</head>
+
+<body>
+
+<div id="wrapper">
+
+	<div class="header">
+		<div id="logo">
+		<h1><a href="/">PubCron</a></h1>
+		<h2>Personal PubMed Watch</h2>
+		</div>
+  </div>
+  <!-- End header -->
+
+	<div class="content">
+  {% block content %}
+		<div class="info">
+    <h1>Moar Personal</h1>
+    PubCron is a personal PubMed watch. With over 2,000 referenced on
+    PubMed, every day, PubCron helps you follow the information that you
+    find relevant. PubCron sends mail that contains a personal selection
+    of PubMed abstracts.
+    <h1>Moar and moar personal</h1>
+    PubCron learns what you like. You can tell PubCron which abstracts
+    you find relevant, and which you'd rather not read. In a couple of
+    days, PubCron will adapt and send you a more personal selection.
+		</div>
+
+  {% endblock %}
+  </div>
+  <!-- end content -->
+
+	<div id="sidebar">
+    <div class="block"><h3><a href="/query">Your query</a></h3></div>
+  	<div class="block">
+     	<h3>Moar stuff</h3>
+     	<ul>
+				<li><a href="/about" title="About">About</a></li>
+				<li><a href="/FAQE" title="FAQ(E)">FAQ(E)</a></li>
+			</ul>
+ 		</div>
+  </div>
+  <!-- end sidebar -->
+
+  <div id="footer">
+  </div><!-- #footer -->
+
+</div>
+</body>
+</html>

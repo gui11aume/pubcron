@@ -3,40 +3,36 @@
 import os
 import re
 import zlib
-try:
-   import json
-except ImportError:
-   import simplejson as json
+import json
 from hashlib import sha1
 
-import app_admin
+import webapp2
+
+import models
+import config
+import utils
+
+import addlibdir
 import eUtils
 import tfidf
 
-from google.appengine.ext import webapp
-from google.appengine.ext import db
-from google.appengine.ext.webapp import template
-from google.appengine.ext.webapp.util import run_wsgi_app
 
 
-class Feedback(webapp.RequestHandler):
+class Feedback(webapp2.RequestHandler):
    """Handle PubCron mail relevance feedback update.
-
    To assert that the POST request is issued from the PubCron mail
    (and not from any other POST-compliant origin), a checksum that
    involves the PMIDs of the articles and a user-specific secret
    salt is recomputed and compared to the checksum sent in the
    request.
-
    Because users do not know their own secret salt, they cannot
    compute the secure checksum themselves from the PMIDs.
-
    This allows PubCron to check the user's identify without them
    having to be logged-in (which turned out to cause bugs because
    users still need to log in on PubCron even when they are logged
    in on Gmail)."""
 
-   def validate_request(self, user_data):
+   def validate_request(self, data):
       """Check that the request is issued from the PubCron Mail."""
       # get PMIDs of abstracts in the mail.
       pmids = ''.join(sorted([
@@ -45,34 +41,24 @@ class Feedback(webapp.RequestHandler):
           if re.match('[0-9]{8}$', pmid)
       ]))
       # Add a pinch of secret salt.
-      checksum = sha1(pmids + user_data.salt).hexdigest()
-
+      checksum = sha1(pmids + data.salt).hexdigest()
       return checksum == self.request.get('checksum')
-
 
    def validate_pmid(self, pmid_list):
       """PMIDs consist of 8 digits. Check that all passed items
       comply to this format."""
       return all([re.match('^[0-9]{8}$', pmid) for pmid in pmid_list])
 
-
    def post(self):
       # Who is it? Get it from the POST parameters.
       uid = self.request.get('uid')
-
-      data = app_admin.UserData.gql('WHERE uid = :1', uid)
-      try:
-         user_data = data[0]
-      except IndexError:
-         # Wrong uid (hacked?!!): good-bye.
-         return
-
+      data = models.UserData.get_by_key_name(uid)
       # Check that POST is issued from PubCron mail.
-      checksum = self.validate_request(user_data)
+      checksum = self.validate_request(data)
       if not self.request.get('checksum'):
          # Could not check identity (hacked?!!): good-bye.
          return
-      
+
       # Identity check successful. Do the update.
       new_relevant_pmids = []
       new_irrelevant_pmids = []
@@ -97,9 +83,9 @@ class Feedback(webapp.RequestHandler):
 
       # From here, PMIDs have been parsed and checked.
       # Now recall and parse user JSON data.
-      mu_corpus = app_admin.decrypt(user_data, 'mu_corpus')
-      relevant_docs = app_admin.decrypt(user_data, 'relevant_docs')
-      irrelevant_docs = app_admin.decrypt(user_data, 'irrelevant_docs')
+      mu_corpus = utils.decrypt(data, 'mu_corpus')
+      relevant_docs = utils.decrypt(data, 'relevant_docs')
+      irrelevant_docs = utils.decrypt(data, 'irrelevant_docs')
 
       # Clear new docs from user data (in case users are notifying
       # that they change their mind on relevance).
@@ -132,34 +118,15 @@ class Feedback(webapp.RequestHandler):
 
 
       # Update the documents...
-      user_data.relevant_docs = zlib.compress(json.dumps(relevant_docs))
-      user_data.irrelevant_docs = zlib.compress(json.dumps(irrelevant_docs))
+      data.relevant_docs = zlib.compress(json.dumps(relevant_docs))
+      data.irrelevant_docs = zlib.compress(json.dumps(irrelevant_docs))
       # ... and put.
-      user_data.put()
+      data.put()
 
-      # Now reassure the user with a warm HTML page :-)
-      dot = os.path.dirname(__file__)
-      template_path = os.path.join(dot, 'pubcron_template.html')
-      content_path = os.path.join(dot, 'content',
-            'feedback_content.html')
-
-      template_values = {
-         'page_title': 'PubCron feedback',
-         'page_content': open(content_path).read(),
-      }
-      self.response.out.write(
-         template.render(template_path, template_values)
-      )
+      # Now reassure the user.
+      self.response.out.write(utils.render('feedback.html'))
 
 
-application = webapp.WSGIApplication([
+app = webapp2.WSGIApplication([
   ('/feedback', Feedback),
-], debug=True)
-
-
-def main():
-   run_wsgi_app(application)
-
-
-if __name__ == '__main__':
-    main()
+])

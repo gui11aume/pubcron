@@ -3,12 +3,6 @@
   <form name="relevance" action="https://pubcron.appspot.com/feedback" method="post">
     <p>Your <a href="http://pubcron.appspot.com">PubCron</a> query
     returned <b>{{nhits}}</b> hits. {{maxhit_exceeded}}</p>
-    {% if retmax_exceeded %}
-    <b>Important note: the number of hits returned by your query
-       exceeded the limit of abstracts that PubCron requests from
-       PubMed. As a results, some hits were ignored. Enter a more
-       specific query term if this message appears regularly.</b><br />
-    {% endif %}
     <p><i>You can specify wheter an abstract is relevant or not
     and notify the Pubcron server by pressing the "Send feedback"
     button (this will trigger a warning). This information will
