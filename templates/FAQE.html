@@ -3,7 +3,7 @@
 {% block content %}
 <div class="info">
   <h1>What is the difference between a FAQ and a FAQ(E)?</h1>
-  A FAQ aims at answering users' frequently asked questions,
+  The aim of an FAQ is to answer users' frequently asked questions,
   while a FAQ(E) is quite the opposite. It looks like a FAQ
   in the question-answer format, but the questions are carefully
   chosen by the developers to emphasize the strengths of their
@@ -13,19 +13,23 @@
   Well, honestly... I don't know.
 
   <h1>What does PubCron do?</h1>
-  PubCron retrieves new PubMed abstracts matching your personal
-  query, sorts them by relevance and sends them to you by mail.
+  PubCron automatically retrieves new
+  <a href="http://www.ncbi.nlm.nih.gov/pubmed">PubMed</a>
+  abstracts matching your
+  personal query, sorts them by relevance and sends them to you by mail.
+  It is a bit like personalized medicine without the medicine part.
 
   <h1>How does that differ from PubCrawler?</h1>
-  Well, not so much really. Mostly, it's the Linux penguin in the
-  title bar of PubCrawler...
-  Not that I have anything against penguins by the way.
+  Well, not so much really. Mostly, it's the Linux penguin 
+  in PubCrawler <i>versus</i> the red book of PubCron.
+  I don't have anything against penguins by the way, it's just
+  that I thought that a book would be more appropriate.
   Still, if you're a penguin type of person, you should definitely
   check out
   <a href="http://pubcrawler.gen.tcd.ie/">PubCrawler</a>.
 
   <h1>Is PubCron open source?</h1>
-  Yes. You can get the source code from
+  Yes, I'm glad you asked. You can get the source code from
   <a href="https://github.com/gui11aume/pubcron">github</a>.
 
   <h1>What do I need to use PubCron?</h1>
@@ -35,34 +39,36 @@
 
   <h1>How can I unsubscribe from PubCron?</h1>
   Fill in an empty query on your PubCron's
-  <a href="query.html">query</a> page.
+  <a href="/query">query</a> page.
 
   <h1>How can I send relevance feedback?</h1>
   You have to do it from the PubCron mails. You can specify whether
   an abstract is relevant or not with the radio buttons after the text.
   Check "No answer" if you do not want to give relevance feedback for
   a particular abstract. Then press one of the "Send feedback" buttons
-  at the beginning or the end of the mail. Note that sending the
-  information from your mail client to PubCron will trigger a warning.
+  at the beginning or the end of the mail. Sending the information
+  from your Gmail to PubCron will trigger a warning. I am not trying
+  to hack the hell out of your personal information, don't worry.
+  At least not for now.
 
   <h1>What do the numbers next to the abstract title mean?</h1>
   This is the abstract relevance score. If you never sent any
   feedback, they should all be 0. Otherwise, they tell you  how the
-  given text matches the abstracts you find relevant. A negative
-  score means that the text is closer to the abstracts you marked
-  as irrelevant than the ones you marked as relevant.
+  given text matches your taste. If the score is negative,
+  the abstract looks like stuff you don't like. If it is positive
+  it looks more like stuff you like.
 
   <h1>Do I have to send feedback for all articles?</h1>
-  Actually you do not have to send feedback at all.
-  But the abstracts will come in a random order. This can
-  be a problem as PubCron has a limit on the number of abstracts
-  sent in each mail (currently 40). If your query returned more
-  than 40 articles, some particularly relevant hits can be lost.
+  You do not have to send feedback at all, but I recommend
+  you send feedback for at least one relevant <em>and</em> one
+  irrelevant abstract. Otherwise the abstracts will come in a
+  random order.
 
   <h1>Why do I receive at most 40 articles?</h1>
-  Hands-on experience showed that the top 40 hits usually contain
-  the most interesting abstracts. And also, without this limit the
-  PubCron mail can become so large that you cannot display it in full.
+  Hands-on experience shows that the top 40 hits usually contain
+  the most interesting abstracts (unless you never gave relevance
+  feedback). Also, without this limit, the PubCron mail can become
+  quite large, which is not cool for your mailbox and your mail client.
 
   <h1>Why do I get a warning message in the PubCron mail?</h1>
   PubCron is a free application powered by
@@ -75,11 +81,11 @@
   PubCron mail). To avoid this, make sure your query is focused
   and does not return too many hits.
 
-  <h1>I gave relevance feedback. Why articles still have a score
-  of 0.0?</h1>
+  <h1>I gave relevance feedback. Why do the articles still have a
+  null score?</h1>
   You probably gave feedback for relevant articles only. PubCron
-  can compute a relevance score only if you also give feedback for
-  irrelevant articles.
+  can compute a relevance score only if you give feedback for
+  <em>both</em> relevant and irrelevant abstracts.
 </div>
 {% endblock %}
 
