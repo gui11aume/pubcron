@@ -56,7 +56,6 @@ def fetch_ids(id_list, **kwargs):
 
    # Query a limited amount of ids at a time (otherwise the URL
    # is too long).
-
    n = len(id_list)
    k = MAX_ID_NUMBER_PER_REQUEST
    id_chunk_list = [
@@ -95,7 +94,7 @@ def eFetch_query(**kwargs):
          + "&retmode=xml")
 
 
-def get_hit_count(term, **kwargs):
+def get_hit_count_or_raise(term, **kwargs):
    """Call eSearch_query and performs error checking.
    Raise Exceptions if no hit, or PubMed errors, otherwise
    return hit count."""
@@ -132,10 +131,10 @@ def robust_eSearch_query(term, retmax=float('inf'), **kwargs):
    "usehistory=y", producing QueryKey and WebEnv output fields that
    can be used for future requests or passed on to eFetch.
 
-   The call to 'get_hit_count()' will raise Python errors in case the
-   query is invalid or suspicious."""
+   The call to 'get_hit_count_or_raise()' will raise Python errors in
+   case the query is invalid or suspicious."""
 
-   count = get_hit_count(term, **kwargs)
+   count = get_hit_count_or_raise(term, **kwargs)
 
    return eSearch_query(
          term = term,

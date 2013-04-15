@@ -28,6 +28,7 @@ class Migrate(webapp2.RequestHandler):
                irrelevant_docs = data.irrelevant_docs,
                term = data.term,
                term_valid = data.term_valid,
+               # That line was useless (mistake).
                last_run = data.last_run
             )
             # Save to the datastore and return.

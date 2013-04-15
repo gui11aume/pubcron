@@ -46,11 +46,11 @@ class Despatcher(webapp2.RequestHandler):
       # Check if there was anything new on PubMed yesterday.
       yesterday = date.today() - timedelta(1)
       try:
-         eUtils.get_hit_count(
+         eUtils.get_hit_count_or_raise(
                term = yesterday.strftime("%Y%%2F%m%%2F%d[crdt]"),
                email = config.ADMAIL
          )
-      except eUtils.PubMedException:
+      except eUtils.PubMedException, eUtils.NoHitException:
          # No hit, or PubMed is not working.
          return
 
@@ -137,13 +137,6 @@ def get_hits_and_send_mail(data):
       maxhit_exceeded = 'Showing only the top %d.' % \
             app_admin.MAXHITS
       abstr_list = abstr_list[:config.MAXHITS]
-      # User's query may also exceed app_admin.RETMAX
-      # (the limit in eSearch results). Let's check that
-      # too while we're at it.
-      yesterdays_hit_count = eUtils.get_hit_count(
-            term = term_yesterday,
-            email = config.ADMAIL
-      )
 
    ## Alchemy test.
    if data.user.email() == 'guillaume.filion@gmail.com':

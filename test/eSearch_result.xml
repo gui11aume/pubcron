@@ -1,0 +1,21 @@
+<eSearchResult>
+	<Count>3621</Count>
+	<RetMax>0</RetMax>
+	<RetStart>0</RetStart>
+	<QueryKey>1</QueryKey>
+	<WebEnv>
+		NCID_1_1308193_130.14.18.48_5555_1366050203_101318632
+	</WebEnv>
+	<IdList/>
+	<TranslationSet/>
+	<TranslationStack>
+		<TermSet>
+			<Term>2013/04/13[crdt]</Term>
+			<Field>crdt</Field>
+			<Count>3621</Count>
+			<Explode>Y</Explode>
+		</TermSet>
+		<OP>GROUP</OP>
+	</TranslationStack>
+	<QueryTranslation>2013/04/13[crdt]</QueryTranslation>
+</eSearchResult>

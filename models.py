@@ -16,7 +16,6 @@ class UserData(db.Model):
    mu_corpus = db.BlobProperty()
    relevant_docs = db.BlobProperty()
    irrelevant_docs = db.BlobProperty()
-   last_run = db.DateTimeProperty()
 
 def init_data(user):
    """Initialize UserData for a new user."""
