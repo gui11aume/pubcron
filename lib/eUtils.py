@@ -131,7 +131,7 @@ def robust_eSearch_query(term, retmax=float('inf'), **kwargs):
    request returns hit count. The second request returns results using
    "usehistory=y", producing QueryKey and WebEnv output fields that
    can be used for future requests or passed on to eFetch.
-   
+
    The call to 'get_hit_count()' will raise Python errors in case the
    query is invalid or suspicious."""
 

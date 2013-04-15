@@ -51,6 +51,7 @@ class Despatcher(webapp2.RequestHandler):
                email = config.ADMAIL
          )
       except eUtils.PubMedException:
+         # No hit, or PubMed is not working.
          return
 
       # Get all user data.
@@ -84,6 +85,7 @@ def get_hits_and_send_mail(data):
          the_day_before.strftime("%Y%%2F%m%%2F%d[crdt])")
 
    # Fetch the abstracts.
+   abstr_list = []
    try:
       abstr_list = eUtils.fetch_abstr(
             term = term_yesterday,
@@ -91,11 +93,12 @@ def get_hits_and_send_mail(data):
             retmax = config.RETMAX,
             email = config.ADMAIL
       )
-   except NoHitException:
+   except eUtils.NoHitException:
       return
-
-   # Can be empty. No big deal, just return.
-   if abstr_list == []: return
+   except eUtils.PubMedException as e:
+      logging.warn('%s: %s' % (data.user.email(), str(e)))
+   # Can be empty.  No big deal, just return.
+   if not abstr_list: return
 
    user_gave_relevance_feedback = \
          utils.decrypt(data, 'relevant_docs') and \
