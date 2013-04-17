@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 
 import os
+import json
 import unittest
 from xml.sax import make_parser
 
@@ -11,10 +12,10 @@ import SAXmed
 class Test_eUtils(unittest.TestCase):
    def test_get_hit_count_or_raise(self):
       # The following should not raise any exception and return
-      # 3621 hits (there were 3621 records added to PubMed on April
-      # 13, 2013.
+      # many hits (there were about 3620 records added to PubMed on
+      # April 13, 2013 but the exact number can change).
       counts = eUtils.get_hit_count_or_raise(u'2013/04/13[crdt]')
-      self.assertEqual(counts, 3621)
+      self.assertTrue(counts > 0)
 
    def test_robust_eSearch_query(self):
       """The exceptions are fired by 'get_hit_count'.
@@ -66,16 +67,27 @@ class Test_eUtils(unittest.TestCase):
 
 class Test_SAXmed(unittest.TestCase):
    def test_eSearchResultHandler(self):
+      """Test the parsing of a typical eSearch result in xml format."""
       qdict = {}
       parser = make_parser()
       parser.setContentHandler(SAXmed.eSearchResultHandler(qdict))
       with open(os.path.join('test', 'eSearch_result.xml')) as f:
          parser.parse(f)
-      target_dict = {
-        'count': u'3621',
-        'query_key': u'1',
-        'WebEnv': u'\n\t\tNCID_1_1308193_130.14.18.48_5555_1366050203_101318632\n\t'
-      }
+      with open(os.path.join('test', 'target_eSearch_result.json')) as f:
+         target = json.load(f)
+      self.assertEqual(qdict, target)
+
+   def test_eFetchResultHandler(self):
+      """Test the parsing of a typical eFetch result in xml format."""
+      ab_list = []
+      parser = make_parser()
+      parser.setContentHandler(SAXmed.eFetchResultHandler(ab_list))
+      with open(os.path.join('test', 'eFetch_result.xml')) as f:
+         parser.parse(f)
+      with open(os.path.join('test', 'target_eFetch_result.json')) as f:
+         target = json.load(f)
+      self.assertEqual(ab_list, target)
+
 
 if __name__ == '__main__':
    unittest.main()

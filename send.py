@@ -52,6 +52,7 @@ class Despatcher(webapp2.RequestHandler):
          )
       except eUtils.PubMedException, eUtils.NoHitException:
          # No hit, or PubMed is not working.
+         logging.warn('no new record on PubMed')
          return
 
       # Get all user data.
@@ -131,11 +132,12 @@ def get_hits_and_send_mail(data):
 
    # Set a limit on hit number.
    nhits = len(abstr_list)
-   maxhit_exceeded = ''
-   if nhits > config.MAXHITS:
+   if nhits < config.MAXHITS + 1:
+      maxhit_exceeded = ''
+   else:
       # Send the top of the sorted list and notify the user.
-      maxhit_exceeded = 'Showing only the top %d.' % \
-            app_admin.MAXHITS
+      maxhit_exceeded = 'Showing only the top %d hits.' % \
+            config.MAXHITS
       abstr_list = abstr_list[:config.MAXHITS]
 
    ## Alchemy test.

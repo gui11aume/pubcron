@@ -1,0 +1,79 @@
+[
+  {
+    "pubdate": "Oct 15 2010", 
+    "title": "Systematic protein location mapping reveals five principal chromatin types in Drosophila cells.", 
+    "text": "Chromatin is important for the regulation of transcription and other functions, yet the diversity of chromatin composition and the distribution along chromosomes are still poorly characterized. By integrative analysis of genome-wide binding maps of 53 broadly selected chromatin components in Drosophila cells, we show that the genome is segmented into five principal chromatin types that are defined by unique yet overlapping combinations of proteins and form domains that can extend over > 100 kb. We identify a repressive chromatin type that covers about half of the genome and lacks classic heterochromatin markers. Furthermore, transcriptionally active euchromatin consists of two types that differ in molecular organization and H3K36 methylation and regulate distinct classes of genes. Finally, we provide evidence that the different chromatin types help to target DNA-binding factors to specific genomic regions. These results provide a global view of chromatin diversity and domain organization in a metazoan cell.", 
+    "journal": "Cell", 
+    "author_list": [
+      "GJ Filion", 
+      "JG van Bemmel", 
+      "U Braunschweig", 
+      "W Talhout", 
+      "J Kind", 
+      "LD Ward", 
+      "W Brugman", 
+      "IJ de Castro", 
+      "RM Kerkhoven", 
+      "HJ Bussemaker", 
+      "B van Steensel"
+    ], 
+    "authors": "GJ Filion, JG van Bemmel, U Braunschweig, W Talhout, J Kind, LD Ward, W Brugman, IJ de Castro, RM Kerkhoven, HJ Bussemaker, B van Steensel", 
+    "pmid": "20888037"
+  }, 
+  {
+    "pubdate": "Apr 2009", 
+    "title": "Permeabilization and hybridization protocols for rapid detection of Bacillus spores using fluorescence in situ hybridization.", 
+    "text": "Fluorescence in situ hybridization (FISH) is not adapted for the detection of bacterial spores because of their resistance to conventional permeabilization treatments. Since spore-forming bacteria have important ecological, economical, and medical roles, their in situ detection needs to be improved. The aim of this study was to develop rapid and effective protocols to permeabilize Bacillus spores in order to apply the FISH technique.Permeabilization protocols were developed for three species of Bacillus spores. Hybridization was performed using universal and specific probes. Surface structural analysis of the permeabilization treatments was performed using scanning electron microscopy.With the proposed protocols, Bacillus spores can be labeled in less than 1 h. The scanning microscopy showed some visible structural differences between the permeabilized spores compared to intact ones.For the first time, rapid and effective protocols to detect Bacillus spores by FISH were developed and can be applied to study Bacillus spores using in situ labeling within 1 h. Previously published in situ hybridization protocols have never reached or been close to the currently described rapidity. This work will contribute to the possibility of near real time detection of biological threats that may be present as spores.", 
+    "journal": "Journal of microbiological methods", 
+    "author_list": [
+      "G Filion", 
+      "C Laflamme", 
+      "N Turgeon", 
+      "J Ho", 
+      "C Duchaine"
+    ], 
+    "authors": "G Filion, C Laflamme, N Turgeon, J Ho, C Duchaine", 
+    "pmid": "19159650"
+  }, 
+  {
+    "pubdate": "Aug 2006", 
+    "title": "Transmission and immunity: the importance of heterogeneity in the fight against malaria.", 
+    "text": "The complex relationship between transmission and parasite prevalence in humans is an important issue. Using a large dataset matching estimates of malaria transmission and Plasmodium falciparum prevalence in African children, a stimulating study published in Nature provides evidence that heterogeneity in susceptibility crucially determines the prevalence of infection. Moreover, it suggests that children who clear infections are not immune to new infections, irrespective of the amount of transmission. It is important to question the relevance of such results based on mathematical models when discussing host-parasite interactions, especially their implications for public health interventions.", 
+    "journal": "Trends in parasitology", 
+    "author_list": [
+      "GJ Filion", 
+      "RE Paul", 
+      "V Robert"
+    ], 
+    "authors": "GJ Filion, RE Paul, V Robert", 
+    "pmid": "16797234"
+  }, 
+  {
+    "pubdate": "Apr 2006", 
+    "title": "[Epigenetics and cancer].", 
+    "text": "The term epigenetics encompasses all the modifications that are stable across cell generations, but which do not imply any change in DNA sequence. Post-translational modifications of the histones and DNA methylation are the most studied types of epigenetic information due to their major impact on transcription. The link between epigenetics and cancer arises from the fact that epigenetic deregulations frequently participate in tumorigenesis by inactivation of tumour-suppressor genes. Since these deregulations are reversible, hopes of treatment rely on a better understanding of the maintenance mechanisms of the epigenetic information. Among the different pathways of transcription inhibition, DNA methylation is the simplest and one of the best characterized at the present time. Inhibitors of DNA methyltransferases are currently under clinical trials and already show promising results.", 
+    "journal": "Bulletin du cancer", 
+    "author_list": [
+      "GJ Filion", 
+      "PA Defossez"
+    ], 
+    "authors": "GJ Filion, PA Defossez", 
+    "pmid": "16627238"
+  }, 
+  {
+    "pubdate": "Jan 2006", 
+    "title": "A family of human zinc finger proteins that bind methylated DNA and repress transcription.", 
+    "text": "In vertebrates, densely methylated DNA is associated with inactive transcription. Actors in this process include proteins of the MBD family that can recognize methylated CpGs and repress transcription. Kaiso, a structurally unrelated protein, has also been shown to bind methylated CGCGs through its three Kr\u00fcppel-like C2H2 zinc fingers. The human genome contains two uncharacterized proteins, ZBTB4 and ZBTB38, that contain Kaiso-like zinc fingers. We report that ZBTB4 and ZBTB38 bind methylated DNA in vitro and in vivo. Unlike Kaiso, they can bind single methylated CpGs. When transfected in mouse cells, the proteins colocalize with foci of heavily methylated satellite DNA and become delocalized upon loss of DNA methylation. Chromatin immunoprecipitation suggests that both of these proteins specifically bind to the methylated allele of the H19/Igf2 differentially methylated region. ZBTB4 and ZBTB38 repress the transcription of methylated templates in transfection assays. The two genes have distinct tissue-specific expression patterns, but both are highly expressed in the brain. Our results reveal the existence of a family of Kaiso-like proteins that bind methylated CpGs. Like proteins of the MBD family, they are able to repress transcription in a methyl-dependent manner, yet their tissue-specific expression pattern suggests nonoverlapping functions.", 
+    "journal": "Molecular and cellular biology", 
+    "author_list": [
+      "GJ Filion", 
+      "S Zhenilo", 
+      "S Salozhin", 
+      "D Yamada", 
+      "E Prokhortchouk", 
+      "PA Defossez"
+    ], 
+    "authors": "GJ Filion, S Zhenilo, S Salozhin, D Yamada, E Prokhortchouk, PA Defossez", 
+    "pmid": "16354688"
+  }
+]
