@@ -4,6 +4,7 @@
 # I do not import because I use only a tiny fraction of it).
 
 import re
+import logging
 from math import log, sqrt
 from porter import PorterStemmer
 from collections import defaultdict
@@ -38,6 +39,8 @@ class ShortFloat(float):
 def preprocess(txt, stem=PorterStemmer().stem):
    # NB: The memory usage is about 2 Mb per 100 PubMed abstracts.
    # Lower-case and tokenize the texts, also remove numbers.
+   if not txt:
+      logging.warn('got an empty txt in `preprocess`')
    txt = re.sub(
       # 2. Remove numbers.
          ' [0-9]+ ',
@@ -50,7 +53,10 @@ def preprocess(txt, stem=PorterStemmer().stem):
       # 3. Split on spaces.
       )).lower().split()
    # Stem the tokens and remove stop words.
-   return [w for w in (stem(w) for w in txt) if not w in stopw]
+   stems = [w for w in (stem(w) for w in txt) if not w in stopw]
+   if not stems:
+      logging.warn('empty stems in `preprocess`')
+   return stems
 
 
 def compute_from_texts(texts, aux=[]):
@@ -108,5 +114,10 @@ def cosine(tfidf_dict_a, tfidf_dict_b):
        sum([v**2 for v in tfidf_dict_a.values()]) * \
        sum([v**2 for v in tfidf_dict_b.values()])
    )
-
-   return numerator / denominator
+   try:
+      return numerator / denominator
+   except ZeroDivisionError:
+      # DEBUG
+      logging.warn('cosine error (1):' + str(tfidf_dict_a))
+      logging.warn('cosine error (2):' + str(tfidf_dict_b))
+      return None

@@ -5,6 +5,8 @@ import json
 import unittest
 from xml.sax import make_parser
 
+import utils
+
 import addlibdir
 import eUtils
 import SAXmed
@@ -87,6 +89,19 @@ class Test_SAXmed(unittest.TestCase):
       with open(os.path.join('test', 'target_eFetch_result.json')) as f:
          target = json.load(f)
       self.assertEqual(ab_list, target)
+
+
+class TestData:
+   def put(self):
+      return True
+
+class Test_utils(unittest.TestCase):
+   def test_try_to_update_term(self):
+      """Test the term update routine."""
+      data = TestData()
+      term = 'chromatin[all]\n+AND+nature[journal]'
+      success = utils.try_to_update_term(data, term)
+      self.assertTrue(success)
 
 
 if __name__ == '__main__':

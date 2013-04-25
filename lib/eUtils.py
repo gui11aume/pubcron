@@ -148,7 +148,8 @@ def eSearch_query(term, usehistory=False, retmax=0, **kwargs):
 
    usehistory = '&usehistory=y' if usehistory else ''
    extrargs = '&' + urllib.urlencode(kwargs) if kwargs else ''
-   return urllib2.urlopen(BASE + "esearch.fcgi?db=pubmed" \
+
+   return urllib2.urlopen(BASE + 'esearch.fcgi?db=pubmed' \
         + '&term=' + term \
         + usehistory \
         + '&retmax=' + str(retmax) \
