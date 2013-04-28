@@ -17,6 +17,13 @@ import eUtils
 import tfidf
 
 
+def and_finally_remove_junk_from(doc_list):
+   """Final QC check before writing to the datastore. Documents
+   with invalid tfidf (most likely because there is no abstract text)
+   are removed in place."""
+   for doc in doc_list:
+      if not doc['tfidf']: doc_list.remove(doc)
+   return
 
 class Feedback(webapp2.RequestHandler):
    """Handle PubCron mail relevance feedback update.
@@ -73,7 +80,7 @@ class Feedback(webapp2.RequestHandler):
          elif self.request.get(name) == 'No':
             new_irrelevant_pmids += [name]
 
-      # It is probably unlikely that a malicious request went
+      # It is unlikely that a malicious request went
       # until here, but because we are about to save user-
       # submitted data, we do a validity (security) check.
       pmids_to_update = new_relevant_pmids + new_irrelevant_pmids
@@ -115,6 +122,7 @@ class Feedback(webapp2.RequestHandler):
             doc['tfidf'] = tfidf_dict
          # Append to user data.
          doc_list.extend(new_docs)
+         and_finally_remove_junk_from(doc_list)
 
 
       # Update the documents...
